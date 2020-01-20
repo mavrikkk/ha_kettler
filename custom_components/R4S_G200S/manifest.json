@@ -1,0 +1,8 @@
+{
+  "domain": "R4S_G200S",
+  "name": "R4S_G200S",
+  "documentation": "https://www.example.com",
+  "dependencies": [],
+  "codeowners": ["@mavrikk"],
+  "requirements": ["pexpect"]
+}
