@@ -19,7 +19,7 @@ r4s_kettler:
 key | description  
 :--- | :---  
 **device (Required)** | The physical bluetooth device, for example 'hci0' (имя физического устройства блютус, например 'hci0')
-**mac (Option)** | The mac address of Redmond Kettler (мак адрес чайника Redmond)
+**mac (Required)** | The mac address of Redmond Kettler (мак адрес чайника Redmond)
 **password (Required)** | the password to your kettler, need to be 8 byte length (пароль для подключения к чайнику, должен быть длиной 8 байт)
 
 
