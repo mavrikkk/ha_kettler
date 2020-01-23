@@ -1,0 +1,111 @@
+#!/usr/local/bin/python3
+# coding: utf-8
+
+from homeassistant.components.water_heater import (WaterHeaterDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, STATE_ELECTRIC, ATTR_TEMPERATURE)
+from homeassistant.const import (STATE_UNKNOWN, STATE_OFF, TEMP_CELSIUS)
+from . import DOMAIN
+
+OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
+    if discovery_info is None:
+        return
+
+    kettler = hass.data[DOMAIN]["kettler"]
+    async_add_entities([RedmondWaterHeater(kettler)])
+
+
+
+
+
+class RedmondWaterHeater(WaterHeaterDevice):
+
+    def __init__(self, kettler):
+        self._name = 'redmondkettler'
+        self._icon = 'mdi:kettle'
+        self._kettler = kettler
+
+
+
+    ### for HASS
+    @property
+    def supported_features(self):
+        return SUPPORT_FLAGS_HEATER
+
+#    @property
+#    def available(self):
+#        return self._avialible
+
+    @property
+    def temperature_unit(self):
+        return TEMP_CELSIUS
+
+    @property
+    def current_temperature(self):
+        return self._kettler._temp
+
+    @property
+    def target_temperature(self):
+        return self._kettler._tgtemp
+
+    @property
+    def target_temperature_step(self):
+        return 5
+
+    @property
+    def current_operation(self):
+        if self._kettler._avialible:
+            if self._kettler._mode == '00' or self._kettler._mode == '01':
+                if self._kettler._status == '02':
+                    return STATE_ELECTRIC
+            return STATE_OFF
+        else:
+            return STATE_UNKNOWN
+
+    @property
+    def operation_list(self):
+        return OPERATION_LIST
+
+    async def async_set_operation_mode(self, operation_mode):
+        lightIsOn = self._kettler.theLightIsOn()
+        if operation_mode == STATE_ELECTRIC:
+            if self._kettler._temp is None:
+                return
+            if self._kettler._tgtemp is None:
+                return
+            if self._kettler._tgtemp == 100:
+                if lightIsOn:
+                    await self._kettler.stopNightColor()
+                await self._kettler.modeOn()
+            else:
+                if lightIsOn:
+                    await self._kettler.stopNightColor()
+                await self._kettler.modeOn("01", self._kettler.decToHex(self._kettler._tgtemp))
+        elif operation_mode == STATE_OFF:
+            await self._kettler.modeOff()
+
+    async def async_set_temperature(self, **kwargs):
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+        self._kettler._tgtemp = temperature
+        await self.async_set_operation_mode(STATE_ELECTRIC)
+
+    @property
+    def min_temp(self):
+        return self._kettler._mntemp
+
+    @property
+    def max_temp(self):
+        return self._kettler._mxtemp
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def icon(self):
+        return self._icon
