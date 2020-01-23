@@ -34,10 +34,16 @@ key | description
 
 **Screenshots**
 
-![example][exampleimg]
+![example1][exampleimg1]
+![example2][exampleimg2]
+![example3][exampleimg3]
+![example4][exampleimg4]
 
 
 
 ***
 
-[exampleimg]: map.jpeg
+[exampleimg1]: 01.jpg
+[exampleimg2]: 02.jpg
+[exampleimg3]: 03.jpg
+[exampleimg4]: 04.jpg
