@@ -1,0 +1,8 @@
+{
+  "domain": "r4s_kettler",
+  "name": "r4s_kettler",
+  "documentation": "https://www.example.com",
+  "dependencies": [],
+  "codeowners": ["@mavrikk"],
+  "requirements": ["pexpect"]
+}
