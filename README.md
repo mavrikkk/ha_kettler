@@ -5,6 +5,7 @@ allows you to connect Redmond Kettler G200S (other kettlers need tests) to your 
 
 
 **What's new:**
+
 2020/01/26 add switch to manage "use backlight to show current temperaure and sync statuses" option
 
 
