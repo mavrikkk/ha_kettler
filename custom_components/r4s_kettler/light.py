@@ -23,7 +23,7 @@ class RedmondLight(Light):
 
     def __init__(self, kettler):
         self._name = 'redmondlight'
-        self._icon = 'mdi:floor-lamp'
+        self._icon = 'mdi:lightbulb'
         self._hs = (0, 0)
         self._kettler = kettler
         self.rgbhex_to_hs()
