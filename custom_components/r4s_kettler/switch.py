@@ -22,7 +22,7 @@ class RedmondSwitch(SwitchDevice):
 
     def __init__(self, kettler):
         self._name = 'redmondusebacklight'
-        self._icon = 'mdi:globe-light'
+        self._icon = 'mdi:floor-lamp'
         self._kettler = kettler
 
 
