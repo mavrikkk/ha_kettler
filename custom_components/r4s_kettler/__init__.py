@@ -32,7 +32,7 @@ REQUIREMENTS = ['pexpect']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ["water_heater", "sensor", "light"]
+SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch"]
 
 DOMAIN = "r4s_kettler"
 
@@ -99,6 +99,7 @@ class RedmondKettler:
         self._rand = '5e'
         self._mode = '00' # '00' - boil, '01' - heat to temp, '03' - backlight
         self._status = '00' #may be '00' - OFF or '02' - ON
+        self._usebacklight = True
         self._iter = 0
 
         self._avialible = False
@@ -283,8 +284,11 @@ class RedmondKettler:
             _LOGGER.error('error set mode')
         return answ
 
-    def sendUseBackLight(self, onoff="01"):
+    def sendUseBackLight(self, use = True):
         answ = False
+        onoff="00"
+        if use:
+            onoff="01"
         try:
             self.child.sendline("char-write-req 0x000e 55" + self.decToHex(self._iter) + "37c8c8" + onoff + "aa") #  onoff: 00 - off, 01 - on
             self.child.expect("value: ")
@@ -380,6 +384,7 @@ class RedmondKettler:
         self._iter = 0
         self._mode = '00'
         self._status = '00'
+        self._usebacklight = True
         self.child = None
         self._is_busy = False
 
@@ -468,7 +473,7 @@ class RedmondKettler:
                     iter+=1
                 if answer:
                     self._avialible = True
-                    if self.sendUseBackLight():
+                    if self.sendUseBackLight(self._usebacklight):
                         if self.sendSetLights():
                             if self.sendSync():
                                 if self.sendStat():
@@ -493,11 +498,12 @@ class RedmondKettler:
                     if self.sendResponse():
                         if self.sendAuth():
                             self._avialible = True
-                            if self.sendSync():
-                                if self.sendStat():
-                                    if self.sendStatus():
-                                        self._time_upd = time.strftime("%H:%M")
-                                        answ = True
+                            if self.sendUseBackLight(self._usebacklight):
+                                if self.sendSync():
+                                    if self.sendStat():
+                                        if self.sendStatus():
+                                            self._time_upd = time.strftime("%H:%M")
+                                            answ = True
             except:
                 _LOGGER.error('error update')
                 self.reset()
