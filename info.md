@@ -3,6 +3,11 @@
 
 
 
+**What's new:**
+2020/01/26 add switch to manage "use backlight to show current temperaure and sync statuses" option
+
+
+
 **Example configuration.yaml:**
 
 ```yaml
