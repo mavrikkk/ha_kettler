@@ -100,6 +100,7 @@ class RedmondKettler:
         self._mode = '00' # '00' - boil, '01' - heat to temp, '03' - backlight
         self._status = '00' #may be '00' - OFF or '02' - ON
         self._usebacklight = True
+        self._hold = False
         self._iter = 0
 
         self._avialible = False
@@ -385,6 +386,7 @@ class RedmondKettler:
         self._mode = '00'
         self._status = '00'
         self._usebacklight = True
+        self._hold = False
         self.child = None
         self._is_busy = False
 
@@ -508,6 +510,8 @@ class RedmondKettler:
                 _LOGGER.error('error update')
                 self.reset()
             self.disconnect()
+            if self._mode == '01' and self._status == '02' and self._temp >= self._tgtemp and self._hold == False:
+                self.modeOff()
             return answ
         else:
             _LOGGER.info('device is busy now')
