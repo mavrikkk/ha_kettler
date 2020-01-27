@@ -8,6 +8,8 @@ allows you to connect Redmond Kettler G200S (other kettlers need tests) to your 
 
 2020/01/26 add switch to manage "use backlight to show current temperaure and sync statuses" option
 
+2020/01/27 add switch to manage "hold temperature after heat" option
+
 
 
 **Example configuration.yaml:**
