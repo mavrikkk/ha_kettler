@@ -13,6 +13,11 @@
 
 
 
+**Installation instructions:**
+<p>After installation add the above strings to your configuration.yaml. Need to come up with any hex password 8 bytes long. Restart HA. You must see new inactive water heater, sensor and light elements. Hold down the button on the kettle until the LEDs flash rapidly. Turn on redmondauthorize switch.
+
+(После установки добавьте вышеуказанные строки в ваш конфигурационный файл. Нужно придумать любой hex пароль длиной 8 байт. Перезагрузите homeassistant для применения конфигурации. После загрузки вы должны увидеть новые неактивные элементы water heater, sensor and light. Удерживайте кнопку на чайнике до тех пор, пока светодиоды не начнут часто мигать. Включите переключатель redmondauthorize. ).</p>
+
 **Example configuration.yaml:**
 
 ```yaml
