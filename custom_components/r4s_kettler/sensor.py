@@ -39,6 +39,10 @@ class RedmondSensor(Entity):
         return self._icon
 
     @property
+    def available(self):
+        return self._kettler._connected
+
+    @property
     def device_state_attributes(self):
         attrs = {}
         attrs[ATTR_WATTS] = str(round(self._kettler._Watts/1000, 2)) + " " + ATTR_WATTS_MEASURE

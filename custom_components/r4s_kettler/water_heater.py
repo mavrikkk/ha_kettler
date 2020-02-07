@@ -35,9 +35,9 @@ class RedmondWaterHeater(WaterHeaterDevice):
     def supported_features(self):
         return SUPPORT_FLAGS_HEATER
 
-#    @property
-#    def available(self):
-#        return self._avialible
+    @property
+    def available(self):
+        return self._kettler._connected
 
     @property
     def temperature_unit(self):
@@ -57,13 +57,10 @@ class RedmondWaterHeater(WaterHeaterDevice):
 
     @property
     def current_operation(self):
-        if self._kettler._avialible:
-            if self._kettler._mode == '00' or self._kettler._mode == '01':
-                if self._kettler._status == '02':
-                    return STATE_ELECTRIC
-            return STATE_OFF
-        else:
-            return STATE_UNKNOWN
+        if self._kettler._mode == '00' or self._kettler._mode == '01':
+            if self._kettler._status == '02':
+                return STATE_ELECTRIC
+        return STATE_OFF
 
     @property
     def operation_list(self):

@@ -21,6 +21,7 @@ from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+import homeassistant.util.color as color_util
 
 CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
@@ -64,7 +65,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         await kettler.firstConnect()
     except:
         _LOGGER.warning("Connect to Kettler %s through device %s failed", mac, dev)
-        return False
 
     async_track_time_interval(hass, kettler.async_update, scan_delta)
 
@@ -82,12 +82,10 @@ class RedmondKettler:
         self._mac = addr
         self._key = key
         self._device = device
-
         self._mntemp = CONF_MIN_TEMP
         self._mxtemp = CONF_MAX_TEMP
         self._tgtemp = CONF_TARGET_TEMP
         self._temp = 0
-
         self._Watts = 0
         self._alltime = 0
         self._times = 0
@@ -95,27 +93,45 @@ class RedmondKettler:
         self._boiltime = '80'
         self._rgb1 = '0000ff'
         self._rgb2 = 'ff0000'
-        self._rgb = 'ff0000'
         self._rand = '5e'
         self._mode = '00' # '00' - boil, '01' - heat to temp, '03' - backlight
         self._status = '00' #may be '00' - OFF or '02' - ON
         self._usebacklight = True
         self._hold = False
         self._iter = 0
-
-        self._avialible = False
+        self._connected = False
         self._is_busy = False
         self.child = None
 
 
 
+    def calcMidColor(self, rgb1, rgb2):
+        try:
+            hs1 = self.rgbhex_to_hs(rgb1)
+            hs2 = self.rgbhex_to_hs(rgb2)
+            hmid = int((hs1[0]+hs2[0])/2)
+            smid = int((hs1[1]+hs2[1])/2)
+            hsmid = (hmid,smid)
+            rgbmid = self.hs_to_rgbhex(hsmid)
+        except:
+            rgbmid = '00ff00'
+        return rgbmid
+
+    def rgbhex_to_hs(self, rgbhex):
+        rgb = color_util.rgb_hex_to_rgb_list(rgbhex)
+        return color_util.color_RGB_to_hs(*rgb)
+
+    def hs_to_rgbhex(self, hs):
+        rgb = color_util.color_hs_to_RGB(*hs)
+        return color_util.color_rgb_to_hex(*rgb)
+
     def theLightIsOn(self):
-        if self._avialible and self._status == '02' and self._mode == '03':
+        if self._status == '02' and self._mode == '03':
             return True
         return False
 
     def theKettlerIsOn(self):
-        if self._avialible and self._status == '02':
+        if self._status == '02':
             if self._mode == '00' or self._mode == '01':
                 return True
         return False
@@ -312,8 +328,6 @@ class RedmondKettler:
             answer = statusStr.split()
             self._rand = str(answer[5])
             if boilOrLight == '01':
-                self._rgb = str(answer[11]) + str(answer[12]) + str(answer[13])
-            else:
                 self._rgb1 = str(answer[6]) + str(answer[7]) + str(answer[8])
                 self._rgb2 = str(answer[16]) + str(answer[17]) + str(answer[18])
             self.child.expect(r'\[LE\]>')
@@ -324,9 +338,13 @@ class RedmondKettler:
             _LOGGER.error('error get lights')
         return answ
 
-    def sendSetLights(self, boilOrLight = '00', rgb1 = '0000ff', rgb2 = 'ff0000', rgb_mid = '00ff00'): # 00 - boil light    01 - backlight
+    def sendSetLights(self, boilOrLight = '00', rgb1 = '0000ff', rgb2 = 'ff0000'): # 00 - boil light    01 - backlight
         answ = False
         try:
+            if rgb1 == '0000ff' and rgb2 == 'ff0000':
+                rgb_mid = '00ff00'
+            else:
+                rgb_mid = self.calcMidColor(rgb1,rgb2)
             if boilOrLight == "00":
                 scale_light = ['28', '46', '64']
             else:
@@ -370,7 +388,7 @@ class RedmondKettler:
         self._is_busy = True
         if self.child != None:
             self.child.sendline("exit")
-        self._avialible = False
+        self._connected = False
         self._tgtemp = CONF_TARGET_TEMP
         self._temp = 0
         self._Watts = 0
@@ -380,7 +398,6 @@ class RedmondKettler:
         self._boiltime = '80'
         self._rgb1 = '0000ff'
         self._rgb2 = 'ff0000'
-        self._rgb = 'ff0000'
         self._rand = '5e'
         self._iter = 0
         self._mode = '00'
@@ -393,7 +410,7 @@ class RedmondKettler:
     async def readNightColor(self):
         return self.sendGetLights()
 
-    async def startNightColor(self, rgb='ff0000'):
+    async def startNightColor(self):
         if not self._is_busy:
             self._is_busy = True
             answ = False
@@ -401,7 +418,7 @@ class RedmondKettler:
                 if self.connect():
                     if self.sendResponse():
                         if self.sendAuth():
-                            if self.sendSetLights('01', rgb, rgb, rgb):
+                            if self.sendSetLights('01', self._rgb1, self._rgb1):
                                 if self.sendMode('03', '00'):
                                     if self.sendOn():
                                         if self.sendStatus():
@@ -474,7 +491,6 @@ class RedmondKettler:
                     sleep(1)
                     iter+=1
                 if answer:
-                    self._avialible = True
                     if self.sendUseBackLight(self._usebacklight):
                         if self.sendSetLights():
                             if self.sendSync():
@@ -486,6 +502,7 @@ class RedmondKettler:
             _LOGGER.error('error first connect')
             self.reset()
         if answ:
+            self._connected = True
             self.disconnect()
         else:
             _LOGGER.error('error first connect')
@@ -499,7 +516,6 @@ class RedmondKettler:
                 if self.connect():
                     if self.sendResponse():
                         if self.sendAuth():
-                            self._avialible = True
                             if self.sendUseBackLight(self._usebacklight):
                                 if self.sendSync():
                                     if self.sendStat():

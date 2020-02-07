@@ -3,7 +3,6 @@
 
 from . import DOMAIN
 from homeassistant.components.light import (ATTR_RGB_COLOR, ATTR_HS_COLOR, SUPPORT_COLOR, Light, )
-import homeassistant.util.color as color_util
 
 
 
@@ -23,22 +22,10 @@ class RedmondLight(Light):
 
     def __init__(self, kettler):
         self._name = 'redmondlight'
+        self._hs = (0,0)
         self._icon = 'mdi:lightbulb'
-        self._hs = (0, 0)
         self._kettler = kettler
-        self.rgbhex_to_hs()
-
-
-
-    def rgbhex_to_hs(self):
-        rgbhex = self._kettler._rgb
-        rgb = color_util.rgb_hex_to_rgb_list(rgbhex)
-        self._hs = color_util.color_RGB_to_hs(*rgb)
-
-    def hs_to_rgbhex(self):
-        rgb = color_util.color_hs_to_RGB(*self._hs)
-        rgbhex = color_util.color_rgb_to_hex(*rgb)
-        return rgbhex
+        self._hs = self._kettler.rgbhex_to_hs(self._kettler._rgb1)
 
     @property
     def name(self):
@@ -50,10 +37,11 @@ class RedmondLight(Light):
 
     @property
     def is_on(self):
-        if self._kettler._avialible and self._kettler._status == '02' and self._kettler._mode == '03':
-            return True
-        else:
-            return False
+        return self._kettler.theLightIsOn()
+
+    @property
+    def available(self):
+        return self._kettler._connected
 
     @property
     def hs_color(self):
@@ -66,11 +54,10 @@ class RedmondLight(Light):
     async def async_turn_on(self, **kwargs):
         if ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
-        self._kettler._rgb = self.hs_to_rgbhex()
-        kettlerIsOn = self._kettler.theKettlerIsOn()
-        if kettlerIsOn:
+        self._kettler._rgb1 = self._kettler.hs_to_rgbhex(self._hs)
+        if self._kettler.theKettlerIsOn():
             await self._kettler.modeOff()
-        await self._kettler.startNightColor(self._kettler._rgb)
+        await self._kettler.startNightColor()
 
     async def async_turn_off(self, **kwargs):
         await self._kettler.stopNightColor()
