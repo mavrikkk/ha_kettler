@@ -9,6 +9,8 @@
 
 2020/01/27 add switch to manage "hold temperature after heat" option
 
+2020/02/07 add switch to first authorize redmond kettler (now, you can initialize Redmond device and AFTER that connect to kettler from HA frontend), bugfixes
+
 
 
 **Example configuration.yaml:**
