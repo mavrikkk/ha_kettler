@@ -31,6 +31,7 @@ key | description
 **device (Required)** | The physical bluetooth device, for example 'hci0' (имя физического устройства блютус, например 'hci0')
 **mac (Required)** | The mac address of Redmond Kettler (мак адрес чайника Redmond)
 **password (Required)** | the password to your kettler, need to be 8 byte length (пароль для подключения к чайнику, должен быть длиной 8 байт)
+**scan_interval (Optional)** | The polling interval in seconds. The default is 60. Please note that at Rasberberry it led to a load on the module and periodic dumps. You can experimentally set the time interval that suits you. (Время между опросами BLE устройства в секундах. По умолчанию 60 секунд. Учтите, что на Raspberry PI  это приводило к нагрузке на модуль и периодическим отвалам. Экспериментальным путем можете установить устраивающий вас промежуток времени.)
 
 
   
