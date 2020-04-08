@@ -1,8 +1,9 @@
 {
   "domain": "r4s_kettler",
   "name": "r4s_kettler",
-  "documentation": "https://www.example.com",
+  "documentation": "https://github.com/mavrikkk/ha_kettler/blob/master/README.md",
   "dependencies": [],
   "codeowners": ["@mavrikk"],
-  "requirements": ["pexpect"]
+  "requirements": ["pexpect"],
+  "config_flow": true
 }

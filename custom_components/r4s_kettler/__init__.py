@@ -6,28 +6,25 @@
 import pexpect
 from time import sleep
 import time
-import colorsys
 from datetime import datetime
 from textwrap import wrap
-import re
-from datetime import timedelta
-import voluptuous as vol
 import logging
 
-from homeassistant.core import callback
-from homeassistant.const import (CONF_DEVICE, CONF_MAC, CONF_PASSWORD, CONF_SCAN_INTERVAL,)
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from datetime import timedelta
+
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL
+)
 
 CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 REQUIREMENTS = ['pexpect']
 
@@ -37,42 +34,48 @@ SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch"]
 
 DOMAIN = "r4s_kettler"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string, vol.Required(CONF_MAC): cv.string, vol.Required(CONF_PASSWORD): cv.string, vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,})}, extra=vol.ALLOW_EXTRA,)
+async def async_setup(hass, config):
+    return True
 
-
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-
+async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN] = {}
 
-    kwargs = dict(config[DOMAIN])
-    dev = kwargs.get(CONF_DEVICE)
-    mac = kwargs.get(CONF_MAC)
-    key = kwargs.get(CONF_PASSWORD)
-    scan_delta = kwargs.get(CONF_SCAN_INTERVAL)
+    config = config_entry.data
 
-    if len(key) != 16:
-        _LOGGER.error("key value is empty or wrong")
-        return False
-
-    mac_validation = bool(re.match('^' + '[\:\-]'.join(['([0-9a-f]{2})']*6) + '$', mac.lower()))
-    if not mac_validation:
-        _LOGGER.error("mac value is empty or wrong")
-        return False
-
-    kettler = hass.data[DOMAIN]["kettler"] = RedmondKettler(hass, mac, key, dev)
+    mac = config.get(CONF_MAC)
+    device = config.get(CONF_DEVICE)
+    password = config.get(CONF_PASSWORD)
+    scan_delta = timedelta(
+        seconds=config.get(CONF_SCAN_INTERVAL)
+    )
+    kettler = hass.data[DOMAIN]["kettler"] = RedmondKettler(
+        hass,
+        mac,
+        password,
+        device
+    )
     try:
         await kettler.firstConnect()
     except:
-        _LOGGER.warning("Connect to Kettler %s through device %s failed", mac, dev)
+        _LOGGER.warning(
+            "Connect to Kettler %s through device %s failed", mac, device)
 
     async_track_time_interval(hass, kettler.async_update, scan_delta)
-
-    for platform in SUPPORTED_DOMAINS:
-        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
+    for domain in SUPPORTED_DOMAINS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, domain)
+        )
 
     return True
 
+
+async def async_remove_entry(hass, entry):
+    """Unload a config entry."""
+    try:
+        for domain in SUPPORTED_DOMAINS:
+            await hass.config_entries.async_forward_entry_unload(entry, domain)
+    except ValueError:
+        pass
 
 
 class RedmondKettler:
