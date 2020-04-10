@@ -17,9 +17,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondSwitchBacklight(SwitchDevice):
 
     def __init__(self, kettler):
-        self._name = 'redmondusebacklight'
+        self._name = 'Kettle use backlight'
         self._icon = 'mdi:floor-lamp'
         self._kettler = kettler
+
+    @property
+    def device_info(self):
+        return {
+            "connections": {
+                ("mac", self._kettler._mac)
+            }
+        }
 
     @property
     def name(self):
@@ -54,9 +62,17 @@ class RedmondSwitchBacklight(SwitchDevice):
 class RedmondSwitchHold(SwitchDevice):
 
     def __init__(self, kettler):
-        self._name = 'redmondhold'
+        self._name = 'Kettle hold temp'
         self._icon = 'mdi:car-brake-hold'
         self._kettler = kettler
+
+    @property
+    def device_info(self):
+        return {
+            "connections": {
+                ("mac", self._kettler._mac)
+            }
+        }
 
     @property
     def name(self):
@@ -92,9 +108,17 @@ class RedmondSwitchHold(SwitchDevice):
 class RedmondSwitchAuthorize(SwitchDevice):
 
     def __init__(self, kettler):
-        self._name = 'redmondauthorize'
+        self._name = 'Kettle authorize'
         self._icon = 'mdi:bluetooth-connect'
         self._kettler = kettler
+
+    @property
+    def device_info(self):
+        return {
+            "connections": {
+                ("mac", self._kettler._mac)
+            }
+        }
 
     @property
     def name(self):

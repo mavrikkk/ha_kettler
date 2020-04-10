@@ -19,11 +19,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondLight(Light):
 
     def __init__(self, kettler):
-        self._name = 'redmondlight'
+        self._name = 'Kettle light'
         self._hs = (0,0)
         self._icon = 'mdi:lightbulb'
         self._kettler = kettler
         self._hs = self._kettler.rgbhex_to_hs(self._kettler._rgb1)
+
+    @property
+    def device_info(self):
+        return {
+            "connections": {
+                ("mac", self._kettler._mac)
+            }
+        }
 
     @property
     def name(self):

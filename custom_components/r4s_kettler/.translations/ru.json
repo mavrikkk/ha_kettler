@@ -15,7 +15,8 @@
     },
     "error": {
       "wrong_password": "Пароль неверной длины",
-      "wrong_mac": "MAC невалиден"
+      "wrong_mac": "MAC невалиден",
+      "wrong_scan_interval": "Интервал обновления должен быть 60 или больше секунд"
     },
     "abort": {
       "already_configured": "Интеграция для этого устройства уже создана"
