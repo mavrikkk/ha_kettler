@@ -1,24 +1,29 @@
 #!/usr/local/bin/python3
 # coding: utf-8
 
-from homeassistant.components.water_heater import (WaterHeaterDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, STATE_ELECTRIC, ATTR_TEMPERATURE)
-from homeassistant.const import (STATE_UNKNOWN, STATE_OFF, TEMP_CELSIUS)
 from . import DOMAIN
+
+from homeassistant.components.water_heater import (
+    WaterHeaterDevice,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE,
+    STATE_ELECTRIC,
+    ATTR_TEMPERATURE
+)
+from homeassistant.const import (
+    STATE_UNKNOWN,
+    STATE_OFF,
+    TEMP_CELSIUS
+)
 
 OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setup sensor platform."""
     kettler = hass.data[DOMAIN]["kettler"]
-    async_add_entities([RedmondWaterHeater(kettler)])
 
-
-
+    async_add_entities([RedmondWaterHeater(kettler)], True)
 
 
 class RedmondWaterHeater(WaterHeaterDevice):
@@ -27,8 +32,6 @@ class RedmondWaterHeater(WaterHeaterDevice):
         self._name = 'redmondkettler'
         self._icon = 'mdi:kettle'
         self._kettler = kettler
-
-
 
     ### for HASS
     @property
@@ -106,3 +109,7 @@ class RedmondWaterHeater(WaterHeaterDevice):
     @property
     def icon(self):
         return self._icon
+
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'

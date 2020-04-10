@@ -4,21 +4,15 @@
 from . import DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
-
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setup sensor platform."""
     kettler = hass.data[DOMAIN]["kettler"]
-    async_add_entities([RedmondSwitchAuthorize(kettler)])
-    async_add_entities([RedmondSwitchBacklight(kettler)])
-    async_add_entities([RedmondSwitchHold(kettler)])
 
-
-
-
+    async_add_entities([
+        RedmondSwitchAuthorize(kettler),
+        RedmondSwitchBacklight(kettler),
+        RedmondSwitchHold(kettler)
+    ], True)
 
 class RedmondSwitchBacklight(SwitchDevice):
 
@@ -51,7 +45,9 @@ class RedmondSwitchBacklight(SwitchDevice):
         self._kettler._usebacklight = False
         await self._kettler.modeUpdate()
 
-
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'
 
 
 
@@ -86,6 +82,9 @@ class RedmondSwitchHold(SwitchDevice):
         self._kettler._hold = False
         await self._kettler.modeUpdate()
 
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'
 
 
 
@@ -119,3 +118,7 @@ class RedmondSwitchAuthorize(SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         pass
+
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'

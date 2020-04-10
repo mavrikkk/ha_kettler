@@ -2,21 +2,19 @@
 # coding: utf-8
 
 from . import DOMAIN
-from homeassistant.components.light import (ATTR_RGB_COLOR, ATTR_HS_COLOR, SUPPORT_COLOR, Light, )
 
+from homeassistant.components.light import (
+    ATTR_RGB_COLOR,
+    ATTR_HS_COLOR,
+    SUPPORT_COLOR,
+    Light
+)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
-
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setup sensor platform."""
     kettler = hass.data[DOMAIN]["kettler"]
-    async_add_entities([RedmondLight(kettler)])
 
-
-
-
+    async_add_entities([RedmondLight(kettler)], True)
 
 class RedmondLight(Light):
 
@@ -61,3 +59,7 @@ class RedmondLight(Light):
 
     async def async_turn_off(self, **kwargs):
         await self._kettler.stopNightColor()
+
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'

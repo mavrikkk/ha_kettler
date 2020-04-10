@@ -11,17 +11,11 @@ ATTR_WATTS_MEASURE = 'kW * h'
 ATTR_ALLTIME_MEASURE = 'h'
 ATTR_TIMES_MEASURE = 'times'
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
-
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setup sensor platform."""
     kettler = hass.data[DOMAIN]["kettler"]
-    async_add_entities([RedmondSensor(kettler)])
 
-
-
-
+    async_add_entities([RedmondSensor(kettler)], True)
 
 class RedmondSensor(Entity):
 
@@ -53,3 +47,7 @@ class RedmondSensor(Entity):
     @property
     def state(self) -> str:
         return self._kettler._time_upd
+
+    @property
+    def unique_id(self):
+        return f'{DOMAIN}[{self._kettler._mac}][{self._name}]'
