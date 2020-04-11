@@ -12,6 +12,7 @@ import logging
 
 from datetime import timedelta
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -48,6 +49,16 @@ async def async_setup_entry(hass, config_entry):
     scan_delta = timedelta(
         seconds=config.get(CONF_SCAN_INTERVAL)
     )
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        name="SkyKettle",
+        model="G200S",
+        manufacturer="Redmond"
+    )
+
     kettler = hass.data[DOMAIN]["kettler"] = RedmondKettler(
         hass,
         mac,

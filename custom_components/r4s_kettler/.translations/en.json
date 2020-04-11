@@ -15,7 +15,8 @@
     },
     "error": {
       "wrong_password": "Password is not 8 byte length",
-      "wrong_mac": "MAC is malformed"
+      "wrong_mac": "MAC is malformed",
+      "wrong_scan_interval": "Scan interval should be 60 or more seconds"
     },
     "abort": {
       "already_configured": "Integration for this device is already configured"

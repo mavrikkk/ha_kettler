@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 
 from re import match as matches
-import voluptuous as vol
+from voluptuous import Schema, Required, Optional
 
 DEFAULT_DEVICE = 'hci0'
 DEFAULT_SCAN_INTERVAL = 60
@@ -31,11 +31,11 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
         mac = user_input.get(CONF_MAC)
         password = user_input.get(CONF_PASSWORD)
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        SCHEMA = vol.Schema({
-            vol.Required(CONF_DEVICE, default=device): str,
-            vol.Required(CONF_MAC, default=mac): str,
-            vol.Required(CONF_PASSWORD, default=password): str,
-            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): int
+        SCHEMA = Schema({
+            Required(CONF_DEVICE, default=device): str,
+            Required(CONF_MAC, default=mac): str,
+            Required(CONF_PASSWORD, default=password): str,
+            Optional(CONF_SCAN_INTERVAL, default=scan_interval): int
         })
         return self.async_show_form(
             step_id='user', data_schema=SCHEMA, errors=errors
@@ -44,6 +44,8 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
     async def create_entry_if_valid(self, user_input):
         mac = user_input.get(CONF_MAC)
         password = user_input.get(CONF_PASSWORD)
+        scan_interval = user_input.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         identifier = f'{DOMAIN}[{mac}]'
         if identifier in self._async_current_ids():
             return self.async_abort(reason='already_configured')
@@ -62,6 +64,14 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
                 user_input=user_input,
                 errors={
                     'base': 'wrong_password'
+                }
+            )
+
+        if scan_interval < 60:
+            return self.show_form(
+                user_input=user_input,
+                errors={
+                    'base': 'wrong_scan_interval'
                 }
             )
 

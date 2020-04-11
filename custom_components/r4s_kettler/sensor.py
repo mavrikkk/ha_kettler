@@ -20,9 +20,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondSensor(Entity):
 
     def __init__(self, kettler):
-        self._name = 'redmondsensors'
+        self._name = 'Kettle sensor'
         self._icon = 'mdi:sync'
         self._kettler = kettler
+
+    @property
+    def device_info(self):
+        return {
+            "connections": {
+                ("mac", self._kettler._mac)
+            }
+        }
 
     @property
     def name(self):
