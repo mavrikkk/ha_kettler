@@ -1,5 +1,5 @@
 **Description (Описание)**
-<p>This integration allows you to connect Redmond Kettler G200S to your HomeAssistant (Интеграция позволяет подключить чайник Redmond G200S к вашему HomeAssistant)</p>
+<p>This integration allows you to connect Redmond SkyKettle G200S, G210S (other kettles need tests) to your Home Assistant (Интеграция позволяет подключить чайник Redmond G200S, G210S (другие нуждаются в тестировании) к вашему HomeAssistant)</p>
 
 
 
@@ -11,21 +11,13 @@
 
 2020/02/07 add switch to first authorize redmond kettler (now, you can initialize Redmond device and AFTER that connect to kettler from HA frontend), bugfixes
 
+2020/04/09 yaml configuration has been replaced with config flow (thanks to https://github.com/fantomnotabene) Now you can add/remove entry via UI without HA restart, able to change entity_id for each entity to your desired.
 
 
 **Installation instructions:**
-<p>After installation add the above strings to your configuration.yaml. Need to come up with any hex password 8 bytes long. Restart HA. You must see new inactive water heater, sensor and light elements. Hold down the button on the kettle until the LEDs flash rapidly. Turn on redmondauthorize switch.
+<p>After installation, in the UI go to the settings page, then to integrations. There click/tap on the plus button and select Redmond SkyKettle integration. Fill all the fields. No more need to reboot. You must see new inactive water heater, sensor and light elements. Hold down the button on the kettle until the LEDs flash rapidly. Turn on redmondauthorize switch
 
-(После установки добавьте вышеуказанные строки в ваш конфигурационный файл. Нужно придумать любой hex пароль длиной 8 байт. Перезагрузите homeassistant для применения конфигурации. После загрузки вы должны увидеть новые неактивные элементы water heater, sensor and light. Удерживайте кнопку на чайнике до тех пор, пока светодиоды не начнут часто мигать. Включите переключатель redmondauthorize. ).</p>
-
-**Example configuration.yaml:**
-
-```yaml
-r4s_kettler:
-  device: 'hci0'
-  mac: 'FF:FF:FF:FF:FF:FF'
-  password: 'ffffffffffffffff'
-```
+(После установки, в пользовательском интерфейсе зайдите на старницу настроек, затем в Интеграции. Там нажмите на кнопку со знаком "+" и выберите интеграцию Redmond SkyKettle. Заполните все поля. Больше нет нужды в перезагрузке. Вы должны увидеть новые неактивные элементы water heater, sensor и light. Удерживайте кнопку на чайнике до тех пор, пока светодиоды не начнут часто мигать. Включите переключатель redmondauthorize. ).</p>
 
 
 
@@ -36,14 +28,6 @@ key | description
 **device (Required)** | The physical bluetooth device, for example 'hci0' (имя физического устройства блютус, например 'hci0')
 **mac (Required)** | The mac address of Redmond Kettler (мак адрес чайника Redmond)
 **password (Required)** | the password to your kettler, need to be 8 byte length (пароль для подключения к чайнику, должен быть длиной 8 байт)
-
-
-  
-**Installation instructions**
-
-<p>After installation add the above strings to your configuration.yaml. Need to come up with any hex password 8 bytes long. Then hold down the button on the kettle until the LEDs flash rapidly. Restart HA immediately.You must see new water heater, sensor and light elements.
-
-(После установки добавьте вышеуказанные строки в ваш конфигурационный файл. Нужно придумать любой hex пароль длиной 8 байт. Удерживайте кнопку на чайнике до тех пор, пока светодиоды не начнут часто мигать. Сразу перезагрузите HA. После загрузки вы должны увидеть новые элементы water heater, sensor and light).</p>
 
 
 
@@ -57,6 +41,7 @@ key | description
 
 
 ***
+
 
 [exampleimg1]: 01.jpg
 [exampleimg2]: 02.jpg
