@@ -6,7 +6,7 @@ allows you to connect Redmond SkyKettle G200S, G210S (other kettles need tests) 
 
 **What's new:**
 
-2020/04/09 yaml configuration has been replaced with config flow (now you can add/remove entry via UI without HA restart, able to change entity_id for each entity to your desired)
+2020/04/09 yaml configuration has been replaced with config flow (thanks to https://github.com/fantomnotabene). Now you can add/remove entry via UI without HA restart, able to change entity_id for each entity to your desired
 
 2020/02/07 add switch to first authorize redmond kettler (now, you can initialize Redmond device and AFTER that connect to kettler from HA frontend), bugfixes
 
