@@ -75,7 +75,7 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
                 }
             )
 
-        if scan_interval < 60:
+        if scan_interval < 30:
             return self.show_form(
                 user_input=user_input,
                 errors={

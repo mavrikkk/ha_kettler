@@ -4,6 +4,6 @@
   "documentation": "https://github.com/mavrikkk/ha_kettler/blob/master/README.md",
   "dependencies": [],
   "codeowners": ["@mavrikk"],
-  "requirements": ["pexpect"],
+  "requirements": [],
   "config_flow": true
 }
