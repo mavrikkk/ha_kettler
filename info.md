@@ -5,6 +5,10 @@
 
 **What's new:**
 
+2020/04/24 complete revision of the code. Replacing "pexpect" library with "bluepy". Instead of an interactive mode, full support for subscribing to notifications. !!!ATTENTION!!! In the new version, some functions are cut down (there are no statistics on power-ups and energy costs, there is no way to turn off the kettle's backlight, there is no HOLD mode)
+
+Полный пересмотр кода. Замена библиотеки pexpect на bluepy. Вместо интерактивного режима работы полная поддержка подписки на уведомления. !!!ВНИМАНИЕ!!! В новой версии урезано часть функций (нет статистики включений и затрат электроэнергии, нет возможности отключить подсветку чайника, нет режима Поддерживать)
+
 2020/01/26 add switch to manage "use backlight to show current temperaure and sync statuses" option
 
 2020/01/27 add switch to manage "hold temperature after heat" option
