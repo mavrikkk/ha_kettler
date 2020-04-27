@@ -63,8 +63,9 @@ class RedmondWaterHeater(WaterHeaterDevice):
         return self._kettler._tgtemp
 
     @property
-    def target_temperature_step(self):
-        return 5
+    def device_state_attributes(self):
+        data = {"target_temp_step": 5}
+        return data
 
     @property
     def current_operation(self):
