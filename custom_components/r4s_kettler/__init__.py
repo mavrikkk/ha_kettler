@@ -1,4 +1,3 @@
-"""Support for Redmond Kettler G200S"""
 
 #!/usr/local/bin/python3
 # coding: utf-8
@@ -101,22 +100,20 @@ class BTLEConnection(btle.DefaultDelegate):
         self._callbacks = {}
 
     def __enter__(self):
-        self._conn = btle.Peripheral()
-        self._conn.withDelegate(self)
-        self._conn.disconnect()
         try:
-            self._conn.connect(self._mac, "random")
+            self._conn = btle.Peripheral()
+            self._conn.withDelegate(self)
+#            self._conn.disconnect()
+            self._conn.connect(addr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
         except btle.BTLEException as ex:
-            try:
-                self._conn.connect(self._mac, "random")
-            except btle.BTLEException as ex:
-                raise
+            self.__exit__()
+            self.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._conn:
             self._conn.disconnect()
-            self._conn = None
+        self._conn = None
 
     def handleNotification(self, handle, data):
         if handle in self._callbacks:
@@ -131,10 +128,9 @@ class BTLEConnection(btle.DefaultDelegate):
 
     def make_request(self, handle, value, timeout=DEFAULT_TIMEOUT, with_response=True):
         try:
-            with self:
-                self._conn.writeCharacteristic(handle, value, withResponse=with_response)
-                if timeout:
-                    self._conn.waitForNotifications(timeout)
+            self._conn.writeCharacteristic(handle, value, withResponse=with_response)
+            if timeout:
+                self._conn.waitForNotifications(timeout)
         except btle.BTLEException as ex:
             raise
 
@@ -170,27 +166,29 @@ class RedmondKettler:
     def handle_notification(self, data):
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
-        if arr[2] == 'ff' or arr[2] == '03'  or arr[2] == '04'  or arr[2] == '05': ### sendAuth  sendOn    sendOff    sendMode
-            if arr[3] == '01':
+        if self.hexToDec(arr[1]) == self._iter: # answer on our request
+            if arr[2] == 'ff' or arr[2] == '03'  or arr[2] == '04'  or arr[2] == '05': ### sendAuth  sendOn    sendOff    sendMode
+                if arr[3] == '01':
+                    self._lastCmd = True
+            if arr[2] == '6e'  or arr[2] == '37' or arr[2] == '32': ### sendSync   sendUseBacklight   sendSetLights
+                if arr[3] == '00':
+                    self._lastCmd = True
+            if arr[2] == '06': ### sendStatus
+                self._status = str(arr[11])
+                self._temp = self.hexToDec(str(arr[8]))
+                self._mode = str(arr[3])
+                tgtemp = str(arr[5])
+                if tgtemp != '00':
+                    self._tgtemp = self.hexToDec(tgtemp)
+                else:
+                    self._tgtemp = 100
                 self._lastCmd = True
-        if arr[2] == '6e'  or arr[2] == '37' or arr[2] == '32': ### sendSync   sendUseBacklight   sendSetLights
-            if arr[3] == '00':
+            if arr[2] == '33': ### sendGetLights
+                self._rand = str(arr[5])
                 self._lastCmd = True
-        if arr[2] == '06': ### sendStatus
-            self._status = str(arr[11])
-            self._temp = self.hexToDec(str(arr[8]))
-            self._mode = str(arr[3])
-            tgtemp = str(arr[5])
-            if tgtemp != '00':
-                self._tgtemp = self.hexToDec(tgtemp)
-            else:
-                self._tgtemp = 100
-            self._lastCmd = True
-        if arr[2] == '33': ### sendGetLights
-            self._rand = str(arr[5])
-            if arr[3] == '01':
-                self._rgb1 = str(arr[6]) + str(arr[7]) + str(arr[8])
-                self._rgb2 = str(arr[16]) + str(arr[17]) + str(arr[18])
+                if arr[3] == '01':
+                    self._rgb1 = str(arr[6]) + str(arr[7]) + str(arr[8])
+                    self._rgb2 = str(arr[16]) + str(arr[17]) + str(arr[18])
 
     def calcMidColor(self, rgb1, rgb2):
         try:
@@ -248,190 +246,140 @@ class RedmondKettler:
 
 
     def sendResponse(self, conn):
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('0100', 'utf-8'))
-            conn.make_request(12, str2b)
-            answ = True
-        except:
-            answ = False
-            _LOGGER.info('error subscription')
-        return answ
+        str2b = binascii.a2b_hex(bytes('0100', 'utf-8'))
+        conn.make_request(12, str2b)
+        return True
 
     def sendAuth(self,conn):
-        answer = False
         self._lastCmd = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + 'ff' + self._key + 'aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answer = self._lastCmd
-            self.iterase()
-        except:
-            answer = False
-            _LOGGER.info('error auth')
-        return answer
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + 'ff' + self._key + 'aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendOn(self,conn):
         self._lastCmd = False
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error mode ON')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendOff(self,conn):
         self._lastCmd = False
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '04aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error mode OFF')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '04aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendSync(self, conn, timezone = 4):
         self._lastCmd = False
-        answ = False
-        try:
-            tmz_hex_list = wrap(str(self.decToHex(timezone*60*60)), 2)
-            tmz_str = ''
-            for i in reversed(tmz_hex_list):
-                tmz_str+=i
-            timeNow_list = wrap(str(self.decToHex(time.mktime(datetime.now().timetuple()))), 2)
-            timeNow_str = ''
-            for i in reversed(timeNow_list):
-                timeNow_str+=i
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error sync time')
-        return answ
+        tmz_hex_list = wrap(str(self.decToHex(timezone*60*60)), 2)
+        tmz_str = ''
+        for i in reversed(tmz_hex_list):
+            tmz_str+=i
+        timeNow_list = wrap(str(self.decToHex(time.mktime(datetime.now().timetuple()))), 2)
+        timeNow_str = ''
+        for i in reversed(timeNow_list):
+            timeNow_str+=i
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendStat(self,conn):
         self._lastCmd = False
-        answ = False
-        try:
-            answ = True
-        except:
-            answ = False
-            _LOGGER.info('error get statistic')
-        return answ
+        return True
 
     def sendStatus(self,conn):
         self._lastCmd = False
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '06aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error get status')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '06aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendMode(self, conn, mode, temp):   # 00 - boil 01 - heat to temp 03 - backlight (boil by default)    temp - in HEX
         self._lastCmd = False
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00000000000000000000800000aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error set mode')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00000000000000000000800000aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendUseBackLight(self, conn, use = True):
         self._lastCmd = False
-        answ = False
         onoff="00"
         if use:
             onoff="01"
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '37c8c8' + onoff + 'aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error set use backlight')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '37c8c8' + onoff + 'aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendGetLights(self, conn, boilOrLight = "01"): # night light by default
         self._lastCmd = False
-        answ = False
-        try:
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '33' + boilOrLight + 'aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ = self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error get lights')
-        return answ
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '33' + boilOrLight + 'aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
     def sendSetLights(self, conn, boilOrLight = '00', rgb1 = '0000ff', rgb2 = 'ff0000'): # 00 - boil light    01 - backlight
         self._lastCmd = False
-        answ = False
-        try:
-            if rgb1 == '0000ff' and rgb2 == 'ff0000':
-                rgb_mid = '00ff00'
-            else:
-                rgb_mid = self.calcMidColor(rgb1,rgb2)
-            if boilOrLight == "00":
-                scale_light = ['28', '46', '64']
-            else:
-                scale_light = ['00', '32', '64']
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '32' + boilOrLight + scale_light[0] + self._rand + rgb1 + scale_light[1] + self._rand + rgb_mid + scale_light[2] + self._rand + rgb2 + 'aa', 'utf-8'))
-            conn.make_request(14, str2b)
-            answ =  self._lastCmd
-            self.iterase()
-        except:
-            answ = False
-            _LOGGER.info('error set colors of light')
-        return answ
+        if rgb1 == '0000ff' and rgb2 == 'ff0000':
+            rgb_mid = '00ff00'
+        else:
+            rgb_mid = self.calcMidColor(rgb1,rgb2)
+        if boilOrLight == "00":
+            scale_light = ['28', '46', '64']
+        else:
+            scale_light = ['00', '32', '64']
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '32' + boilOrLight + scale_light[0] + self._rand + rgb1 + scale_light[1] + self._rand + rgb_mid + scale_light[2] + self._rand + rgb2 + 'aa', 'utf-8'))
+        conn.make_request(14, str2b)
+        self.iterase()
+        return self._lastCmd
 
 ### composite methods
-    async def readNightColor(self):
+    async def readNightColor(self,i=0):
         if not self._is_busy:
             self._is_busy = True
             answ = False
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendGetLights():
-                            answ = True
+            try:
+                with self._conn as conn:
+                    if self.sendResponse(conn):
+                        if self.sendAuth(conn):
+                            if self.sendGetLights():
+                                answ = True
+            except:
+                _LOGGER.warning('error readNightColor')
+            if not answ:
+                i=i+1
+                if i<3:
+                    self._is_busy = False
+                    answ = await self.readNightColor(i)
             self._is_busy = False
             return answ
         else:
             return False
 
-    async def startNightColor(self):
+    async def startNightColor(self, i=0):
         if not self._is_busy:
             self._is_busy = True
             answ = False
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendSetLights(conn, '01', self._rgb1, self._rgb1):
-                            if self.sendMode(conn, '03', '00'):
-                                if self.sendOn(conn):
-                                    if self.sendStatus(conn):
-                                        self._time_upd = time.strftime("%H:%M")
-                                        answ = True
+            try:
+                with self._conn as conn:
+                    if self.sendResponse(conn):
+                        if self.sendAuth(conn):
+                            if self.sendSetLights(conn, '01', self._rgb1, self._rgb1):
+                                if self.sendMode(conn, '03', '00'):
+                                    if self.sendOn(conn):
+                                        if self.sendStatus(conn):
+                                            self._time_upd = time.strftime("%H:%M")
+                                            answ = True
+            except:
+                _LOGGER.warning('error startNightColor')
+            if not answ:
+                i=i+1
+                if i<3:
+                    self._is_busy = False
+                    answ = await self.startNightColor(i)
             self._is_busy = False
             return answ
         else:
@@ -440,60 +388,83 @@ class RedmondKettler:
     async def stopNightColor(self):
         await self.modeOff()
 
-    async def modeOn(self, mode = "00", temp = "00"):
+    async def modeOn(self, mode = "00", temp = "00", i=0):
         if not self._is_busy:
             self._is_busy = True
             answ = False
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendMode(conn, mode, temp):
-                            if self.sendOn(conn):
+            try:
+                with self._conn as conn:
+                    if self.sendResponse(conn):
+                        if self.sendAuth(conn):
+                            if self.sendMode(conn, mode, temp):
+                                if self.sendOn(conn):
+                                    if self.sendStatus(conn):
+                                        self._time_upd = time.strftime("%H:%M")
+                                        answ = True
+            except:
+                _LOGGER.warning('error sendModeOn')
+            if not answ:
+                i=i+1
+                if i<3:
+                    self._is_busy = False
+                    answ = await self.modeOn(mode,temp,i)
+            self._is_busy = False
+            return answ
+        else:
+            return False
+
+    async def modeOff(self, i=0):
+        if not self._is_busy:
+            self._is_busy = True
+            answ = False
+            try:
+                with self._conn as conn:
+                    if self.sendResponse(conn):
+                        if self.sendAuth(conn):
+                            if self.sendOff(conn):
                                 if self.sendStatus(conn):
                                     self._time_upd = time.strftime("%H:%M")
                                     answ = True
+            except:
+                _LOGGER.warning('error sendModeOff')
+            if not answ:
+                i=i+1
+                if i<3:
+                    self._is_busy = False
+                    answ = await self.modeOff(i)
             self._is_busy = False
             return answ
         else:
             return False
 
-    async def modeOff(self):
-        if not self._is_busy:
-            self._is_busy = True
-            answ = False
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendOff(conn):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-            self._is_busy = False
-            return answ
-        else:
-            return False
-
-    async def firstConnect(self):
+    async def firstConnect(self, i=0):
         self._is_busy = True
         iter = 0
         answ = False
-        with self._conn as conn:
-            while iter < 10:  # 10 attempts to auth
-                answer = False
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        answer = True
-                        break
-                sleep(1)
-                iter+=1
-            if answer:
-                if self.sendUseBackLight(conn):
-                    if self.sendSync(conn):
-                        if self.sendStatus(conn):
-                            self._time_upd = time.strftime("%H:%M")
-                            answ = True
-            if answ:
-                self._connected = True
+        try:
+            with self._conn as conn:
+                while iter < 10:  # 10 attempts to auth
+                    answer = False
+                    if self.sendResponse(conn):
+                        if self.sendAuth(conn):
+                            answer = True
+                            break
+                    sleep(1)
+                    iter+=1
+                if answer:
+                    if self.sendUseBackLight(conn):
+                        if self.sendSync(conn):
+                            if self.sendStatus(conn):
+                                self._time_upd = time.strftime("%H:%M")
+                                answ = True
+                if answ:
+                    self._connected = True
+        except:
+            _LOGGER.warning('error firstConnect')
+        if not answ:
+            i=i+1
+            if i<3:
+                await self.firstConnect(i)
         self._is_busy = False
 
     async def modeUpdate(self, i=0):
@@ -509,6 +480,8 @@ class RedmondKettler:
                                     self._time_upd = time.strftime("%H:%M")
                                     answ = True
             except:
+                _LOGGER.warning('error sendUpdate')
+            if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
