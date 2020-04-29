@@ -101,10 +101,9 @@ class BTLEConnection(btle.DefaultDelegate):
 
     def __enter__(self):
         try:
-            self._conn = btle.Peripheral()
+            self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
             self._conn.withDelegate(self)
-#            self._conn.disconnect()
-            self._conn.connect(addr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
+#            self._conn.connect(addr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
         except btle.BTLEException as ex:
             self.__exit__()
             self.__enter__()
@@ -348,12 +347,14 @@ class RedmondKettler:
                             if self.sendGetLights():
                                 answ = True
             except:
-                _LOGGER.warning('error readNightColor')
+                pass
             if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
                     answ = await self.readNightColor(i)
+                else:
+                    _LOGGER.warning('three attempts of readNightColor failed')
             self._is_busy = False
             return answ
         else:
@@ -374,12 +375,14 @@ class RedmondKettler:
                                             self._time_upd = time.strftime("%H:%M")
                                             answ = True
             except:
-                _LOGGER.warning('error startNightColor')
+                pass
             if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
                     answ = await self.startNightColor(i)
+                else:
+                    _LOGGER.warning('three attempts of startNightColor failed')
             self._is_busy = False
             return answ
         else:
@@ -402,12 +405,14 @@ class RedmondKettler:
                                         self._time_upd = time.strftime("%H:%M")
                                         answ = True
             except:
-                _LOGGER.warning('error sendModeOn')
+                pass
             if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
                     answ = await self.modeOn(mode,temp,i)
+                else:
+                    _LOGGER.warning('three attempts of modeOn failed')
             self._is_busy = False
             return answ
         else:
@@ -426,12 +431,14 @@ class RedmondKettler:
                                     self._time_upd = time.strftime("%H:%M")
                                     answ = True
             except:
-                _LOGGER.warning('error sendModeOff')
+                pass
             if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
                     answ = await self.modeOff(i)
+                else:
+                    _LOGGER.warning('three attempts of modeOff failed')
             self._is_busy = False
             return answ
         else:
@@ -460,11 +467,13 @@ class RedmondKettler:
                 if answ:
                     self._connected = True
         except:
-            _LOGGER.warning('error firstConnect')
+            pass
         if not answ:
             i=i+1
             if i<3:
                 await self.firstConnect(i)
+            else:
+                _LOGGER.warning('three attempts of firstConnect failed')
         self._is_busy = False
 
     async def modeUpdate(self, i=0):
@@ -480,12 +489,14 @@ class RedmondKettler:
                                     self._time_upd = time.strftime("%H:%M")
                                     answ = True
             except:
-                _LOGGER.warning('error sendUpdate')
+                pass
             if not answ:
                 i=i+1
                 if i<3:
                     self._is_busy = False
                     answ = await self.modeUpdate(i)
+                else:
+                    _LOGGER.warning('three attempts of modeUpdate failed')
             self._is_busy = False
             return answ
         else:
