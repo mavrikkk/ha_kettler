@@ -42,7 +42,9 @@ class RedmondLight(Light):
 
     @property
     def is_on(self):
-        return self._kettler.theLightIsOn()
+        if self._kettler._status == '02' and self._kettler._mode == '03':
+            return True
+        return False
 
     @property
     def available(self):
@@ -60,12 +62,10 @@ class RedmondLight(Light):
         if ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
         self._kettler._rgb1 = self._kettler.hs_to_rgbhex(self._hs)
-        if self._kettler.theKettlerIsOn():
-            await self._kettler.modeOff()
         await self._kettler.startNightColor()
 
     async def async_turn_off(self, **kwargs):
-        await self._kettler.stopNightColor()
+        await self._kettler.modeOff()
 
     @property
     def unique_id(self):

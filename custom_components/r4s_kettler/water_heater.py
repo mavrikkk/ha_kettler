@@ -20,11 +20,8 @@ OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup sensor platform."""
     kettler = hass.data[DOMAIN]["kettler"]
-
     async_add_entities([RedmondWaterHeater(kettler)], True)
-
 
 class RedmondWaterHeater(WaterHeaterDevice):
 
@@ -79,19 +76,14 @@ class RedmondWaterHeater(WaterHeaterDevice):
         return OPERATION_LIST
 
     async def async_set_operation_mode(self, operation_mode):
-        lightIsOn = self._kettler.theLightIsOn()
         if operation_mode == STATE_ELECTRIC:
             if self._kettler._temp is None:
                 return
             if self._kettler._tgtemp is None:
                 return
             if self._kettler._tgtemp == 100:
-                if lightIsOn:
-                    await self._kettler.stopNightColor()
                 await self._kettler.modeOn()
             else:
-                if lightIsOn:
-                    await self._kettler.stopNightColor()
                 await self._kettler.modeOn("01", self._kettler.decToHex(self._kettler._tgtemp))
         elif operation_mode == STATE_OFF:
             await self._kettler.modeOff()
