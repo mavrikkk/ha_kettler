@@ -80,18 +80,22 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
 
     def get_devices(self):
         first_hci = 'hci0'
-
-        byte_output = check_output(['hciconfig'])
-        string_output = byte_output.decode('utf-8')
-        lines = string_output.splitlines()
-        hci_devices = [line.split(':')[0] for line in lines if 'hci' in line]
-        self._hci_devices = {line:line for line in hci_devices}
-        first_hci = hci_devices[0]
-
-        match_result = search(r'hci([\d]+)', first_hci)
-        if match_result is None:
+        try:
+            byte_output = check_output(['hciconfig'])
+            string_output = byte_output.decode('utf-8')
+            lines = string_output.splitlines()
+            hci_devices = [line.split(':')[0] for line in lines if 'hci' in line]
+            self._hci_devices = {line:line for line in hci_devices}
+            first_hci = hci_devices[0]
+        except:
+            self._hci_devices = {'hci0':'hci0'}
+        try:
+            match_result = search(r'hci([\d]+)', first_hci)
+            if match_result is None:
+                pass
+            else:
+                iface = int(match_result.group(1))
+                scanner = Scanner(iface=iface)
+                self._ble_devices = {str(device.addr):str(device.getValueText(9))+','+str(device.addr) for device in scanner.scan(3.0)}
+        except:
             pass
-        else:
-            iface = int(match_result.group(1))
-            scanner = Scanner(iface=iface)
-            self._ble_devices = {device.addr:device.addr for device in scanner.scan(3.0)}
