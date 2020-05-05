@@ -317,9 +317,9 @@ class RedmondKettler:
 
     def sendMode(self, conn, mode, temp):   # 00 - boil 01 - heat to temp 03 - backlight (boil by default)    temp - in HEX
         answ = False
-        if self._type == 0 or self._type == 2:
+        if self._type == 0:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00aa', 'utf-8'))
-        if self._type == 1:
+        if self._type == 1 or self._type == 2:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00000000000000000000800000aa', 'utf-8'))
         if conn.make_request(14, str2b):
             self.iterase()
