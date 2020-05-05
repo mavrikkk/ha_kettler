@@ -14,8 +14,11 @@ from subprocess import check_output
 from re import match as matches
 from voluptuous import Schema, Required, Optional, In
 
+CONF_USE_BACKLIGHT = 'use_backlight'
+
 DEFAULT_DEVICE = "hci0"
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_SCAN_INTERVAL = 30
+DEFAULT_USE_BACKLIGHT = True
 
 @config_entries.HANDLERS.register(DOMAIN)
 class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
@@ -26,30 +29,47 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
     def __init__(self):
         self._hci_devices = {}
         self._ble_devices = {}
+        self._use_backlight = {True:True, False:False}
         self.get_devices()
+        self.data = {}
 
     async def async_step_user(self, user_input={}):
         if user_input:
-            return await self.create_entry_if_valid(user_input)
-
+            return await self.check_valid(user_input)
         return self.show_form()
+
+    async def async_step_info(self, user_input={}):
+        return await self.create_entry()
 
     def show_form(self, user_input={}, errors={}):
         device = user_input.get(CONF_DEVICE, DEFAULT_DEVICE)
         mac = user_input.get(CONF_MAC)
         password = user_input.get(CONF_PASSWORD)
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        backlight = user_input.get(CONF_USE_BACKLIGHT, DEFAULT_USE_BACKLIGHT)
         SCHEMA = Schema({
             Required(CONF_DEVICE, default=device): In(self._hci_devices),
             Required(CONF_MAC, default=mac): In(self._ble_devices),
             Required(CONF_PASSWORD, default=password): str,
-            Optional(CONF_SCAN_INTERVAL, default=scan_interval): int
+            Optional(CONF_SCAN_INTERVAL, default=scan_interval): int,
+            Optional(CONF_USE_BACKLIGHT, default=backlight): In(self._use_backlight)
         })
         return self.async_show_form(
             step_id='user', data_schema=SCHEMA, errors=errors
         )
 
-    async def create_entry_if_valid(self, user_input):
+    def show_form_info(self):
+        return self.async_show_form(step_id='info')
+
+    async def create_entry(self):
+        mac = self.data.get(CONF_MAC)
+        identifier = f'{DOMAIN}[{mac}]'
+        await self.async_set_unique_id(identifier)
+        return self.async_create_entry(
+            title=mac, data=self.data
+        )
+
+    async def check_valid(self, user_input):
         mac = user_input.get(CONF_MAC)
         password = user_input.get(CONF_PASSWORD)
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -65,18 +85,15 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
                 }
             )
 
-        if scan_interval < 30:
+        if scan_interval < 10 or scan_interval > 300:
             return self.show_form(
                 user_input=user_input,
                 errors={
                     'base': 'wrong_scan_interval'
                 }
             )
-
-        await self.async_set_unique_id(identifier)
-        return self.async_create_entry(
-            title=mac, data=user_input
-        )
+        self.data = user_input
+        return self.show_form_info()
 
     def get_devices(self):
         first_hci = 'hci0'

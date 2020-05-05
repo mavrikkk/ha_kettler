@@ -25,11 +25,13 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 
+CONF_USE_BACKLIGHT = 'use_backlight'
+
 CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
 
-SUPPORTED_DEVICES = {'RK-G200S':1, 'test':0}
+SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-M216S':2}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +51,7 @@ async def async_setup_entry(hass, config_entry):
     device = config.get(CONF_DEVICE)
     password = config.get(CONF_PASSWORD)
     scan_delta = timedelta(seconds=config.get(CONF_SCAN_INTERVAL))
+    backlight = config.get(CONF_USE_BACKLIGHT)
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -63,7 +66,8 @@ async def async_setup_entry(hass, config_entry):
         hass,
         mac,
         password,
-        device
+        device,
+        backlight
     )
 
     try:
@@ -138,11 +142,12 @@ class BTLEConnection(btle.DefaultDelegate):
 
 class RedmondKettler:
 
-    def __init__(self, hass, addr, key, device):
+    def __init__(self, hass, addr, key, device, backlight):
         self.hass = hass
         self._mac = addr
         self._key = key
         self._device = device
+        self._use_backlight = backlight
         self._type = 1
         self._mntemp = CONF_MIN_TEMP
         self._mxtemp = CONF_MAX_TEMP
@@ -179,17 +184,24 @@ class RedmondKettler:
         if arr[2] == '03'  or arr[2] == '04'  or arr[2] == '05' or arr[2] == '6e'  or arr[2] == '37' or arr[2] == '32' or arr[2] == '33': ### sendOn    sendOff    sendMode    sendSync   sendUseBacklight   sendSetLights   sendGetLights
             pass
         if arr[2] == '06': ### sendStatus
-            self._status = str(arr[11])
-            self._mode = str(arr[3])
-            tgtemp = str(arr[5])
-            if tgtemp != '00':
-                self._tgtemp = self.hexToDec(tgtemp)
-            else:
-                self._tgtemp = 100
             if self._type == 0:
                 self._temp = self.hexToDec(str(arr[13]))
+                self._status = str(arr[11])
+                self._mode = str(arr[3])
+                tgtemp = str(arr[5])
+                if tgtemp != '00':
+                    self._tgtemp = self.hexToDec(tgtemp)
+                else:
+                    self._tgtemp = 100
             if self._type == 1 or self._type == 2:
                 self._temp = self.hexToDec(str(arr[8]))
+                self._status = str(arr[11])
+                self._mode = str(arr[3])
+                tgtemp = str(arr[5])
+                if tgtemp != '00':
+                    self._tgtemp = self.hexToDec(tgtemp)
+                else:
+                    self._tgtemp = 100
 
     def calcMidColor(self, rgb1, rgb2):
         try:
@@ -254,7 +266,7 @@ class RedmondKettler:
         answ = False
         if self._type == 0:
             answ = True
-        else:
+        if self._type == 1 or self_type == 2:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
             if conn.make_request(14, str2b):
                 self.iterase()
@@ -271,20 +283,23 @@ class RedmondKettler:
 
     def sendSync(self, conn, timezone = 4):
         answ = False
-        if self._type == 0 or self._type == 2:
+        if self._type == 0:
             answ = True
-        else:
-            tmz_hex_list = wrap(str(self.decToHex(timezone*60*60)), 2)
-            tmz_str = ''
-            for i in reversed(tmz_hex_list):
-                tmz_str+=i
-            timeNow_list = wrap(str(self.decToHex(time.mktime(datetime.now().timetuple()))), 2)
-            timeNow_str = ''
-            for i in reversed(timeNow_list):
-                timeNow_str+=i
-            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa', 'utf-8'))
-            if conn.make_request(14, str2b):
-                self.iterase()
+        if self._type == 1 or self._type == 2:
+            if self._use_backlight:
+                tmz_hex_list = wrap(str(self.decToHex(timezone*60*60)), 2)
+                tmz_str = ''
+                for i in reversed(tmz_hex_list):
+                    tmz_str+=i
+                timeNow_list = wrap(str(self.decToHex(time.mktime(datetime.now().timetuple()))), 2)
+                timeNow_str = ''
+                for i in reversed(timeNow_list):
+                    timeNow_str+=i
+                str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa', 'utf-8'))
+                if conn.make_request(14, str2b):
+                    self.iterase()
+                    answ = True
+            else:
                 answ = True
         return answ
 
@@ -304,20 +319,20 @@ class RedmondKettler:
         answ = False
         if self._type == 0 or self._type == 2:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00aa', 'utf-8'))
-        else:
+        if self._type == 1:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00000000000000000000800000aa', 'utf-8'))
         if conn.make_request(14, str2b):
             self.iterase()
             answ = True
         return answ
 
-    def sendUseBackLight(self, conn, use = True):
+    def sendUseBackLight(self, conn):
         answ = False
-        if self._type == 0 or self._type == 2:
+        if self._type == 0:
             answ = True
-        else:
+        if self._type == 1 or self._type == 2:
             onoff="00"
-            if use:
+            if self._use_backlight:
                 onoff="01"
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '37c8c8' + onoff + 'aa', 'utf-8'))
             if conn.make_request(14, str2b):
@@ -329,7 +344,7 @@ class RedmondKettler:
         answ = False
         if self._type == 0 or self._type == 2:
             answ = True
-        else:
+        if self._type == 1:
             rgb_mid = rgb1
             rgb2 = rgb1
             if boilOrLight == "00":
