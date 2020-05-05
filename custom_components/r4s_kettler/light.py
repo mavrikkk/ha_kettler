@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     kettler = hass.data[DOMAIN]["kettler"]
-    if kettler._type == 1 or kettler._type == 2:
+    if kettler._type == 1:
         async_add_entities([RedmondLight(kettler)], True)
 
 class RedmondLight(Light):
