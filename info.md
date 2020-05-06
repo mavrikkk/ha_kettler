@@ -1,5 +1,5 @@
 **Description (Описание)**
-<p>This integration allows you to connect Redmond SkyKettle G200S, G210S (other kettles need tests) to your Home Assistant (Интеграция позволяет подключить чайник Redmond G200S, G210S (другие нуждаются в тестировании) к вашему HomeAssistant)</p>
+<p>allows you to connect Redmond SkyKettle to your Home Assistant (tested devices: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S) (Интеграция позволяет подключить чайники Redmond к вашему HomeAssistant (протестированные устройства: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S))</p>
 
 
 
