@@ -1,10 +1,14 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 
 # Redmond SkyKettle series integration
-allows you to connect Redmond SkyKettle G200S, G210S (other kettles need tests) to your Home Assistant
+allows you to connect Redmond SkyKettle to your Home Assistant (tested devices: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S)
 
 
 **What's new:**
+
+2020/05/06 Minor bug fixes and improvements. integration some other models. The name of the device is the model of kettle. Removed Authorize switch. Autorization is in the config flow. Turn on or turn off backlight is in the config flow !!!ATTENTION!!! In this version, some functions are cut down (there are no statistics on power-ups and energy costs, there is no HOLD mode)
+
+Мелкие исправления и улучшения. Частичная интеграции других моделей чайников. Имя устройства соответствует модели вашего чайника. Убран элемент authorize. Авторизация встроена в первоначальную настройку. В первоначальную настройку добавлена возможность включения или отключения постоянной подсветки. !!!ВНИМАНИЕ!!! Все также урезано часть функций (нет статистики включений и затрат электроэнергии, нет режима Поддерживать)
 
 2020/04/30 Now the integration finds all the bluetooth devices during connection and offers to select it from the list. Minor bug fixes and improvements. Preparing for the integration of other models. !!!ATTENTION!!! In this version, some functions are cut down (there are no statistics on power-ups and energy costs, there is no way to turn off the kettle's backlight, there is no HOLD mode)
 
