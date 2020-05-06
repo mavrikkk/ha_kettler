@@ -31,7 +31,7 @@ CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
 
-SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-M216S':2}
+SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-M216S':2}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,6 +149,7 @@ class RedmondKettler:
         self._device = device
         self._use_backlight = backlight
         self._type = 1
+        self._name = 'redmond sky'
         self._mntemp = CONF_MIN_TEMP
         self._mxtemp = CONF_MAX_TEMP
         self._tgtemp = CONF_TARGET_TEMP
@@ -476,6 +477,8 @@ class RedmondKettler:
                 ble_devices = {device.addr:str(device.getValueText(9)) for device in scanner.scan(2.0)}
                 dev_name = ble_devices.get(self._mac, 'None')
                 self._type = SUPPORTED_DEVICES.get(dev_name, 1)
+                if dev_name != 'None':
+                    self._name = dev_name
         except:
             _LOGGER.error('unable to know the type of device...use default')
 

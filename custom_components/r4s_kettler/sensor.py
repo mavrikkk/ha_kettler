@@ -11,7 +11,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondSensor(Entity):
 
     def __init__(self, kettler):
-        self._name = 'Kettle sensor'
+        self._name = 'Sensor ' + kettler._name
         self._icon = 'mdi:sync'
         self._kettler = kettler
 

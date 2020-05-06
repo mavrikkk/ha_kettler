@@ -11,7 +11,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondSwitchAuthorize(SwitchDevice):
 
     def __init__(self, kettler):
-        self._name = 'Kettle authorize'
+        self._name = 'Authorize ' + kettler._name
         self._icon = 'mdi:bluetooth-connect'
         self._kettler = kettler
 

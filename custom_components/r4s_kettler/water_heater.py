@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondWaterHeater(WaterHeaterDevice):
 
     def __init__(self, kettler):
-        self._name = 'Kettle'
+        self._name = 'Kettle ' + kettler._name
         self._icon = 'mdi:kettle'
         self._kettler = kettler
 
