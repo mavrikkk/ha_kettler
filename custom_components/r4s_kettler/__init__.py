@@ -31,7 +31,7 @@ CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
 
-SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-M216S':2}
+SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-M216S':2, 'RMC-M800S':5}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-        name="SkyKettle",
-        model="G200S",
+        name="ReadyForSky",
+        model="ReadyForSky",
         manufacturer="Redmond"
     )
 
@@ -159,9 +159,15 @@ class RedmondKettler:
         self._rgb1 = '0000ff'
         self._rgb2 = 'ff0000'
         self._rand = '5e'
-        self._mode = '00' # '00' - boil, '01' - heat to temp, '03' - backlight
-        self._status = '00' #may be '00' - OFF or '02' - ON
+        self._mode = '00' # '00' - boil, '01' - heat to temp, '03' - backlight  for cooker 00 - heat after cook   01 - off after cook
+        self._status = '00' #may be '00' - OFF or '02' - ON  for cooker 00 - off   01 - setup program   02 - on  04 - heat   05 - delayed start
         self._iter = 0
+        self._prog = '00' #  program
+        self._sprog = '00' # subprogram
+        self._ph = '00' #  program hours
+        self._pm = '00' #  program min
+        self._th = '00' #  timer hours
+        self._tm = '00' #  timer min
         self._connected = False
         self._conn = BTLEConnection(self._mac)
         self._conn.set_callback(11, self.handle_notification)
@@ -172,7 +178,7 @@ class RedmondKettler:
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
         if arr[2] == 'ff': ### sendAuth
-            if self._type == 0 or self._type == 1:
+            if self._type == 0 or self._type == 1 or self._type == 5:
                 if arr[3] == '01':
                     self._connected = True
                 else:
@@ -203,6 +209,17 @@ class RedmondKettler:
                     self._tgtemp = self.hexToDec(tgtemp)
                 else:
                     self._tgtemp = 100
+            if self._type == 5:
+                self._prog = str(arr[3])
+                self._sprog = str(arr[4])
+                self._temp = self.hexToDec(str(arr[5]))
+                self._tgtemp = self.hexToDec(str(arr[5]))
+                self._ph = str(arr[6])
+                self._pm = str(arr[7])
+                self._th = str(arr[8])
+                self._tm = str(arr[9])
+                self._mode = str(arr[10])
+                self._status = str(arr[11])
 
     def calcMidColor(self, rgb1, rgb2):
         try:
@@ -267,7 +284,7 @@ class RedmondKettler:
         answ = False
         if self._type == 0:
             answ = True
-        if self._type == 1 or self_type == 2:
+        if self._type == 1 or self._type == 2 or self._type == 5:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
             if conn.make_request(14, str2b):
                 self.iterase()
@@ -284,7 +301,7 @@ class RedmondKettler:
 
     def sendSync(self, conn, timezone = 4):
         answ = False
-        if self._type == 0:
+        if self._type == 0 or self._type == 5:
             answ = True
         if self._type == 1 or self._type == 2:
             if self._use_backlight:
@@ -318,6 +335,8 @@ class RedmondKettler:
 
     def sendMode(self, conn, mode, temp):   # 00 - boil 01 - heat to temp 03 - backlight (boil by default)    temp - in HEX
         answ = False
+        if self._type == 5:
+            return True
         if self._type == 0:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00aa', 'utf-8'))
         if self._type == 1 or self._type == 2:
@@ -327,9 +346,20 @@ class RedmondKettler:
             answ = True
         return answ
 
+    def sendModeCook(self, conn, prog, sprog, temp, hours, minutes, dhours, dminutes, heat): #
+        answ = False
+        if self._type == 5:
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + prog + sprog + temp + hours + minutes + dhours + dminutes + heat + 'aa', 'utf-8'))
+            if conn.make_request(14, str2b):
+                self.iterase()
+                answ = True
+        else:
+            answ  = True
+        return answ
+
     def sendUseBackLight(self, conn):
         answ = False
-        if self._type == 0:
+        if self._type == 0 or self._type == 5:
             answ = True
         if self._type == 1 or self._type == 2:
             onoff="00"
@@ -343,7 +373,7 @@ class RedmondKettler:
 
     def sendSetLights(self, conn, boilOrLight = '01', rgb1 = '0000ff'): # 00 - boil light    01 - backlight
         answ = False
-        if self._type == 0 or self._type == 2:
+        if self._type == 0 or self._type == 2 or self._type == 5:
             answ = True
         if self._type == 1:
             rgb_mid = rgb1
@@ -414,6 +444,34 @@ class RedmondKettler:
             i=i+1
             if i<5:
                 answ = await self.modeOn(mode,temp,i)
+            else:
+                _LOGGER.warning('five attempts of modeOn failed')
+        return answ
+
+    async def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01', i=0):
+        answ = False
+        try:
+            with self._conn as conn:
+                if self.sendResponse(conn):
+                    if self.sendAuth(conn):
+                        offed = False
+                        if self._status != '00':
+                            if self.sendOff(conn):
+                                offed = True
+                        else:
+                            offed = True
+                        if offed:
+                            if self.sendModeCook(conn, prog, sprog, temp, hours, minutes, dhours, dminutes, heat):
+                                if self.sendOn(conn):
+                                    if self.sendStatus(conn):
+                                        self._time_upd = time.strftime("%H:%M")
+                                        answ = True
+        except:
+            pass
+        if not answ:
+            i=i+1
+            if i<5:
+                answ = await self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i)
             else:
                 _LOGGER.warning('five attempts of modeOn failed')
         return answ

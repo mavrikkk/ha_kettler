@@ -52,7 +52,7 @@ class RedmondLight(Light):
 
     @property
     def hs_color(self):
-        return self._hs
+        return self._kettler.rgbhex_to_hs(self._kettler._rgb1)
 
     @property
     def supported_features(self):
