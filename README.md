@@ -50,6 +50,8 @@ key | description
 (После установки, в пользовательском интерфейсе зайдите на старницу настроек, затем в Интеграции. Там нажмите на кнопку со знаком "+" и выберите интеграцию Redmond SkyKettle. Заполните все поля. Больше нет нужды в перезагрузке. Вы должны увидеть новые неактивные элементы water heater, sensor и light. Удерживайте кнопку на чайнике до тех пор, пока светодиоды не начнут часто мигать. Включите переключатель redmondauthorize. ).</p>
 
 
+**WARNING**
+this configuration works out of the box with hassio. In any other configuration, you may have to make additional settings: Install modules for working with bluetooth (pybluez, bluepy), configure these modules so that they work without root privileges. (данная конфигурация работает из коробки с hassio. В любой другой конфигурации возможно придется сделать дополнительные настройки: Установить модули для работы с bluetooth (pybluez, bluepy), настроить эти модули так, чтобы они работали без прав root.)
 
 **Screenshots**
 
