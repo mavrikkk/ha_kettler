@@ -1,5 +1,5 @@
 **Description (Описание)**
-<p>allows you to connect Redmond SkyKettle to your Home Assistant (tested devices: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S) (Интеграция позволяет подключить чайники Redmond к вашему HomeAssistant (протестированные устройства: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S))</p>
+<p>allows you to connect Redmond SkyKettle (tested devices: RK-M173S, RK-G200S, RK-G201S, RK-G202S, RK-G210S, RK-G211S, RK-G212S) and SkyCooker (tested RMC-M800S) to your Home Assistant.</p>
 
 
 
