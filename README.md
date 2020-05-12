@@ -1,7 +1,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 
-# Redmond SkyKettle series integration
-allows you to connect Redmond SkyKettle to your Home Assistant (tested devices: RK-M173S, RK-G200S, RK-G210S, RK-G211S, RK-G212S)
+# Redmond SkyKettle and SkyCooker series integration
+allows you to connect Redmond SkyKettle (tested devices: RK-M173S, RK-G200S, RK-G201S, RK-G202S, RK-G210S, RK-G211S, RK-G212S) and SkyCooker (tested RMC-M800S) to your Home Assistant.
 
 
 **What's new:**
