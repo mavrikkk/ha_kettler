@@ -3,6 +3,8 @@
 
 from . import DOMAIN
 
+import voluptuous as vol
+
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
     SUPPORT_TARGET_TEMPERATURE,
@@ -15,6 +17,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS
 )
+from homeassistant.helpers import entity_platform
 
 OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
@@ -49,8 +52,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([RedmondWaterHeater(kettler)], True)
     if kettler._type == 5:
         async_add_entities([RedmondCooker(kettler)], True)
-
-
+        platform = entity_platform.current_platform.get()
+        platform.async_register_entity_service("set_timer",{vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)), vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59))},"async_set_timer",)
+        platform.async_register_entity_service("set_manual_program",{vol.Required("prog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=12)), vol.Required("subprog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=3)),vol.Required("temp"): vol.All(vol.Coerce(int), vol.Range(min=30, max=180)), vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("dhours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("dminutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("heat"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1))},"async_set_manual_program",)
 
 
 
@@ -168,7 +172,7 @@ class RedmondCooker(WaterHeaterDevice):
     ### for HASS
     @property
     def supported_features(self):
-        return SUPPORT_OPERATION_MODE
+        return SUPPORT_FLAGS_HEATER
 
     @property
     def available(self):
@@ -180,7 +184,7 @@ class RedmondCooker(WaterHeaterDevice):
 
     @property
     def current_temperature(self):
-        return self._kettler._temp
+        return self._kettler._tgtemp
 
     @property
     def target_temperature(self):
@@ -209,6 +213,39 @@ class RedmondCooker(WaterHeaterDevice):
         else:
             program = COOKER_PROGRAMS[operation_mode]
             await self._kettler.modeOnCook(program[0],program[1],program[2],program[3],program[4])
+
+    async def async_set_manual_program(self, program={}):
+        if program == {}:
+            return
+        try:
+            prog = self._kettler.decToHex(program['prog'])
+            subprog = self._kettler.decToHex(program['subprog'])
+            temp = self._kettler.decToHex(program['temp'])
+            hours = self._kettler.decToHex(program['hours'])
+            minutes = self._kettler.decToHex(program['minutes'])
+            dhours = self._kettler.decToHex(program['dhours'])
+            dminutes = self._kettler.decToHex(program['dminutes'])
+            heat = self._kettler.decToHex(program['heat'])
+            await self._kettler.modeOnCook(prog,subprog,temp,hours,minutes,dhours,dminutes,heat)
+        except:
+            pass
+
+    async def async_set_timer(self, timer={}):
+        if timer == {}:
+            return
+        try:
+            hours = self._kettler.decToHex(timer['hours'])
+            minutes = self._kettler.decToHex(timer['minutes'])
+            await self._kettler.modeTimeCook(hours,minutes)
+        except:
+            pass
+
+    async def async_set_temperature(self, **kwargs):
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+        self._kettler._tgtemp = temperature
+        await self._kettler.modeTempCook(temperature)
 
     @property
     def min_temp(self):

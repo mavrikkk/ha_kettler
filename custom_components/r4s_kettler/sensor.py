@@ -98,12 +98,12 @@ class RedmondSensorTimer(Entity):
     @property
     def state(self):
         if self._curr:
-            hr = str(self._kettler.hexToDec(self._kettler._th))
-            mn = str(self._kettler.hexToDec(self._kettler._tm))
+            hr = self._kettler._th
+            mn = self._kettler._tm
         else:
-            hr = str(self._kettler.hexToDec(self._kettler._ph))
-            mn = str(self._kettler.hexToDec(self._kettler._pm))
-        return hr+':'+mn
+            hr = self._kettler._ph
+            mn = self._kettler._pm
+        return str(hr) + ':' + str(mn)
 
     @property
     def unique_id(self):

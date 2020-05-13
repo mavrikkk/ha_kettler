@@ -93,6 +93,7 @@ async def async_remove_entry(hass, entry):
         pass
 
 
+
 class BTLEConnection(btle.DefaultDelegate):
 
     def __init__(self, mac):
@@ -164,10 +165,10 @@ class RedmondKettler:
         self._iter = 0
         self._prog = '00' #  program
         self._sprog = '00' # subprogram
-        self._ph = '00' #  program hours
-        self._pm = '00' #  program min
-        self._th = '00' #  timer hours
-        self._tm = '00' #  timer min
+        self._ph = 0 #  program hours
+        self._pm = 0 #  program min
+        self._th = 0 #  timer hours
+        self._tm = 0 #  timer min
         self._connected = False
         self._conn = BTLEConnection(self._mac)
         self._conn.set_callback(11, self.handle_notification)
@@ -357,6 +358,28 @@ class RedmondKettler:
             answ  = True
         return answ
 
+    def sendTimerCook(self, conn, hours, minutes): #
+        answ = False
+        if self._type == 5:
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '0c' + hours + minutes + 'aa', 'utf-8'))
+            if conn.make_request(14, str2b):
+                self.iterase()
+                answ = True
+        else:
+            answ  = True
+        return answ
+
+    def sendTempCook(self, conn, temp): #
+        answ = False
+        if self._type == 5:
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '0b' + temp + 'aa', 'utf-8'))
+            if conn.make_request(14, str2b):
+                self.iterase()
+                answ = True
+        else:
+            answ  = True
+        return answ
+
     def sendUseBackLight(self, conn):
         answ = False
         if self._type == 0 or self._type == 5:
@@ -474,6 +497,44 @@ class RedmondKettler:
                 answ = await self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i)
             else:
                 _LOGGER.warning('five attempts of modeOn failed')
+        return answ
+
+    async def modeTempCook(self, temp, i=0):
+        answ = False
+        try:
+            with self._conn as conn:
+                if self.sendResponse(conn):
+                    if self.sendAuth(conn):
+                        if self.sendTempCook(conn, temp):
+                            answ = True
+                            self._tgtemp = self.hexToDec(temp)
+        except:
+            pass
+        if not answ:
+            i=i+1
+            if i<5:
+                answ = await self.modeTempCook(temp, i)
+            else:
+                _LOGGER.warning('five attempts of modeTempCook failed')
+        return answ
+
+    async def modeTimeCook(self, hours, minutes, i=0):
+        answ = False
+        try:
+            with self._conn as conn:
+                if self.sendResponse(conn):
+                    if self.sendAuth(conn):
+                        if self.sendTimerCook(conn, hours, minutes):
+                            answ = True
+                            self._tgtemp = self.hexToDec(temp)
+        except:
+            pass
+        if not answ:
+            i=i+1
+            if i<5:
+                answ = await self.modeTimeCook(hours, minutes, i)
+            else:
+                _LOGGER.warning('five attempts of modeTimeCook failed')
         return answ
 
     async def modeOff(self, i=0):

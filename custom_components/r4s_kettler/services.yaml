@@ -1,0 +1,43 @@
+set_timer:
+  description: Set cooker timer.
+  fields:
+    entity_id:
+      description: Name of entity that will set the timer.
+      example: "water_heater.rmc800"
+    hours:
+      description: Number of hours for the timer.
+      example: 1
+    minutes:
+      description: Number of minutes for the timer.
+      example: 30
+
+set_manual_program:
+  description: Set manual program.
+  fields:
+    entity_id:
+      description: Name of entity that will be unjoined from their group.
+      example: "water_heater.rmc800"
+    prog:
+      description: the program.
+      example: 10
+    subprog:
+      description: the sub program.
+      example: 3
+    temp:
+      description: the temperature, celsius.
+      example: 100
+    hours:
+      description: Number of hours for the timer.
+      example: 1
+    minutes:
+      description: Number of minutes for the timer.
+      example: 30
+    dhours:
+      description: Number of hours for the delay timer.
+      example: 1
+    dminutes:
+      description: Number of minutes for the delay timer.
+      example: 30
+    heat:
+      description: heat (1) or not (0) after cooking.
+      example: 1
