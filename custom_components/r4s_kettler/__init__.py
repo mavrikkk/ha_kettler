@@ -526,7 +526,8 @@ class RedmondKettler:
                     if self.sendAuth(conn):
                         if self.sendTimerCook(conn, hours, minutes):
                             answ = True
-                            self._tgtemp = self.hexToDec(temp)
+                            self._ph = self.hexToDec(hours)
+                            self._pm = self.hexToDec(minutes)
         except:
             pass
         if not answ:

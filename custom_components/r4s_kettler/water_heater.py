@@ -23,24 +23,24 @@ OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
 COOKER_PROGRAMS = {
-    'rice':['01', '00', '64', '00', '23'],
-    'slow_cooking':['02', '00', '61', '03', '00'],
-    'pilaf':['03', '00', '6e', '01', '00'],
-    'frying_vegetables':['04', '01', 'b4', '00', '12',],
-    'frying_fish':['04', '02', 'b4', '00', '0c'],
-    'frying_meat':['04', '03', 'b4', '00', '0f'],
-    'stewing_vegetables':['05', '01', '64', '00', '28',],
-    'stewing_fish':['05', '02', '64', '00', '23'],
-    'stewing_meat':['05', '03', '64', '01', '00'],
-    'pasta':['06', '00', '64', '00', '08'],
-    'milk_porridge':['07', '00', '5f', '00', '23'],
-    'soup':['08', '00', '63', '01', '00'],
-    'yogurt':['09', '00', '28', '08', '00'],
-    'baking':['0a', '00', '91', '00', '2d'],
-    'steam_vegetables':['0b', '01', '64', '00', '1e'],
-    'steam_fish':['0b', '02', '64', '00', '19'],
-    'steam_meat':['0b', '03', '64', '00', '28'],
-    'hot':['0с', '00', '64', '00', '28']}
+    'rice':['01', '00', '64', '00', '23','00','00','01'],
+    'slow_cooking':['02', '00', '61', '03', '00','00','00','01'],
+    'pilaf':['03', '00', '6e', '01', '00','00','00','01'],
+    'frying_vegetables':['04', '01', 'b4', '00', '12','00','00','01'
+    'frying_fish':['04', '02', 'b4', '00', '0c','00','00','01'
+    'frying_meat':['04', '03', 'b4', '00', '0f','00','00','01'
+    'stewing_vegetables':['05', '01', '64', '00', '28','00','00','01'],
+    'stewing_fish':['05', '02', '64', '00', '23','00','00','01'],
+    'stewing_meat':['05', '03', '64', '01', '00','00','00','01'],
+    'pasta':['06', '00', '64', '00', '08','00','00','01'],
+    'milk_porridge':['07', '00', '5f', '00', '23','00','00','01'],
+    'soup':['08', '00', '63', '01', '00','00','00','01'],
+    'yogurt':['09', '00', '28', '08', '00','00','00','00'],
+    'baking':['0a', '00', '91', '00', '2d','00','00','01'],
+    'steam_vegetables':['0b', '01', '64', '00', '1e','00','00','01'],
+    'steam_fish':['0b', '02', '64', '00', '19','00','00','01'],
+    'steam_meat':['0b', '03', '64', '00', '28','00','00','01'],
+    'hot':['0c', '00', '64', '00', '28','00','00','01']}
 COOKER_OPERATION_LIST = [program for program,value in COOKER_PROGRAMS.items()]
 COOKER_OPERATION_LIST.append(STATE_OFF)
 
@@ -212,7 +212,7 @@ class RedmondCooker(WaterHeaterDevice):
             await self._kettler.modeOff()
         else:
             program = COOKER_PROGRAMS[operation_mode]
-            await self._kettler.modeOnCook(program[0],program[1],program[2],program[3],program[4])
+            await self._kettler.modeOnCook(program[0],program[1],program[2],program[3],program[4],program[5],program[6],program[7])
 
     async def async_set_manual_program(self, prog=None, subprog=None, temp=None, hours=None, minutes=None, dhours=None, dminutes=None, heat=None):
         if prog == None or subprog == None or temp == None or hours == None or minutes == None or dhours == None or dminutes == None or heat == None:
@@ -244,8 +244,7 @@ class RedmondCooker(WaterHeaterDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._kettler._tgtemp = temperature
-        await self._kettler.modeTempCook(temperature)
+        await self._kettler.modeTempCook(self._kettler.decToHex(temperature))
 
     @property
     def min_temp(self):
