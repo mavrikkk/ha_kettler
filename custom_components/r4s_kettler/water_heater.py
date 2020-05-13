@@ -214,29 +214,29 @@ class RedmondCooker(WaterHeaterDevice):
             program = COOKER_PROGRAMS[operation_mode]
             await self._kettler.modeOnCook(program[0],program[1],program[2],program[3],program[4])
 
-    async def async_set_manual_program(self, program={}):
-        if program == {}:
+    async def async_set_manual_program(self, prog=None, subprog=None, temp=None, hours=None, minutes=None, dhours=None, dminutes=None, heat=None):
+        if prog == None or subprog == None or temp == None or hours == None or minutes == None or dhours == None or dminutes == None or heat == None:
             return
         try:
-            prog = self._kettler.decToHex(program['prog'])
-            subprog = self._kettler.decToHex(program['subprog'])
-            temp = self._kettler.decToHex(program['temp'])
-            hours = self._kettler.decToHex(program['hours'])
-            minutes = self._kettler.decToHex(program['minutes'])
-            dhours = self._kettler.decToHex(program['dhours'])
-            dminutes = self._kettler.decToHex(program['dminutes'])
-            heat = self._kettler.decToHex(program['heat'])
-            await self._kettler.modeOnCook(prog,subprog,temp,hours,minutes,dhours,dminutes,heat)
+            progh = self._kettler.decToHex(prog)
+            subprogh = self._kettler.decToHex(subprog)
+            temph = self._kettler.decToHex(temp)
+            hoursh = self._kettler.decToHex(hours)
+            minutesh = self._kettler.decToHex(minutes)
+            dhoursh = self._kettler.decToHex(dhours)
+            dminutesh = self._kettler.decToHex(dminutes)
+            heath = self._kettler.decToHex(heat)
+            await self._kettler.modeOnCook(progh,subprogh,temph,hoursh,minutesh,dhoursh,dminutesh,heath)
         except:
             pass
 
-    async def async_set_timer(self, timer={}):
-        if timer == {}:
+    async def async_set_timer(self, hours=None, minutes=None):
+        if hours == None or minutes == None:
             return
         try:
-            hours = self._kettler.decToHex(timer['hours'])
-            minutes = self._kettler.decToHex(timer['minutes'])
-            await self._kettler.modeTimeCook(hours,minutes)
+            hoursh = self._kettler.decToHex(hours)
+            minutesh = self._kettler.decToHex(minutes)
+            await self._kettler.modeTimeCook(hoursh,minutesh)
         except:
             pass
 
