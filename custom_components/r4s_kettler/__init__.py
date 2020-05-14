@@ -35,7 +35,7 @@ SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch"]
+SUPPORTED_DOMAINS = ["water_heater", "sensor", "light"]
 
 DOMAIN = "r4s_kettler"
 
