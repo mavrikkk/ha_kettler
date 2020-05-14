@@ -10,9 +10,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     kettler = hass.data[DOMAIN]["kettler"]
     async_add_entities([RedmondSensor(kettler)], True)
     if kettler._type == 5:
-        async_add_entities([RedmondSensorTimer(kettler, True)], True)
-        async_add_entities([RedmondSensorTimer(kettler, False)], True)
-        async_add_entities([RedmondSensorStatus(kettler)], True)
+#        async_add_entities([RedmondSensorTimer(kettler, True)], True)
+#        async_add_entities([RedmondSensorTimer(kettler, False)], True)
+        async_add_entities([RedmondCooker(kettler)], True)
 
 
 
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RedmondSensor(Entity):
 
     def __init__(self, kettler):
-        self._name = 'Sensor ' + kettler._name
+        self._name = 'Status ' + kettler._name
         self._icon = 'mdi:sync'
         self._kettler = kettler
 
@@ -46,8 +46,20 @@ class RedmondSensor(Entity):
         return self._kettler._connected
 
     @property
-    def state(self) -> str:
-        return self._kettler._time_upd
+    def state(self):
+        if self._kettler._status == '02':
+            if self._kettler._mode == '00':
+                return 'BOIL'
+            if self._kettler._mode == '01':
+                return 'HEAT'
+            if self._kettler._mode == '03':
+                return 'LIGHT'
+        return 'OFF'
+
+    @property
+    def device_state_attributes(self):
+        attributes = {'sync':str(self._kettler._time_upd)}
+        return attributes
 
     @property
     def unique_id(self):
@@ -113,7 +125,7 @@ class RedmondSensorTimer(Entity):
 
 
 
-class RedmondSensorStatus(Entity):
+class RedmondCooker(Entity):
 
     def __init__(self, kettler):
         self._icon = 'mdi:book-open'
@@ -152,6 +164,13 @@ class RedmondSensorStatus(Entity):
             return 'HEAT'
         if self._kettler._status == '05':
             return 'DELAYED START'
+
+    @property
+    def device_state_attributes(self):
+        attributes = {
+            'Timer PROG':str(self._kettler._ph)+':'+str(self._kettler._pm),
+            'Timer CURR':str(self._kettler._th)+':'+str(self._kettler._tm)}
+        return attributes
 
     @property
     def unique_id(self):

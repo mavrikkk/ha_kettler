@@ -108,8 +108,7 @@ class BTLEConnection(btle.DefaultDelegate):
             self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
             self._conn.withDelegate(self)
         except:
-            sleep(1.0)
-            self.__enter__()
+            pass
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -139,6 +138,7 @@ class BTLEConnection(btle.DefaultDelegate):
         except:
             pass
         return answ
+
 
 
 class RedmondKettler:
@@ -215,10 +215,10 @@ class RedmondKettler:
                 self._sprog = str(arr[4])
                 self._temp = self.hexToDec(str(arr[5]))
                 self._tgtemp = self.hexToDec(str(arr[5]))
-                self._ph = str(arr[6])
-                self._pm = str(arr[7])
-                self._th = str(arr[8])
-                self._tm = str(arr[9])
+                self._ph = self.hexToDec(str(arr[6]))
+                self._pm = self.hexToDec(str(arr[7]))
+                self._th = self.hexToDec(str(arr[8]))
+                self._tm = self.hexToDec(str(arr[9]))
                 self._mode = str(arr[10])
                 self._status = str(arr[11])
 
@@ -258,11 +258,7 @@ class RedmondKettler:
 
 
     async def async_update(self, now, **kwargs) -> None:
-        try:
-            await self.modeUpdate()
-        except:
-            return
-        async_dispatcher_send(self.hass, DOMAIN)
+        await self.modeUpdate()
 
 
 
@@ -433,6 +429,7 @@ class RedmondKettler:
                                         if self.sendStatus(conn):
                                             self._time_upd = time.strftime("%H:%M")
                                             answ = True
+                                            async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -461,6 +458,7 @@ class RedmondKettler:
                                     if self.sendStatus(conn):
                                         self._time_upd = time.strftime("%H:%M")
                                         answ = True
+                                        async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -489,6 +487,7 @@ class RedmondKettler:
                                     if self.sendStatus(conn):
                                         self._time_upd = time.strftime("%H:%M")
                                         answ = True
+                                        async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -506,8 +505,10 @@ class RedmondKettler:
                 if self.sendResponse(conn):
                     if self.sendAuth(conn):
                         if self.sendTempCook(conn, temp):
-                            answ = True
-                            self._tgtemp = self.hexToDec(temp)
+                            if self.sendStatus(conn):
+                                self._time_upd = time.strftime("%H:%M")
+                                answ = True
+                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -525,9 +526,10 @@ class RedmondKettler:
                 if self.sendResponse(conn):
                     if self.sendAuth(conn):
                         if self.sendTimerCook(conn, hours, minutes):
-                            answ = True
-                            self._ph = self.hexToDec(hours)
-                            self._pm = self.hexToDec(minutes)
+                            if self.sendStatus(conn):
+                                self._time_upd = time.strftime("%H:%M")
+                                answ = True
+                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -548,6 +550,7 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
+                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -577,6 +580,7 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
+                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -612,6 +616,7 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
+                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:

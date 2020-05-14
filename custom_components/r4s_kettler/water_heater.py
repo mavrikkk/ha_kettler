@@ -205,6 +205,7 @@ class RedmondCooker(WaterHeaterDevice):
             for key,value in COOKER_PROGRAMS.items():
                 if value[0] == self._kettler._prog:
                     return key
+            return 'MANUAL'
         return STATE_OFF
 
     async def async_set_operation_mode(self, operation_mode):
