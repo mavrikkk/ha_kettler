@@ -19,6 +19,37 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_platform
 
+
+
+###
+import logging
+import typing
+import datetime
+from homeassistant.const import (
+    ATTR_DATE,
+    ATTR_EDITABLE,
+    ATTR_TIME,
+    CONF_ICON,
+    CONF_ID,
+    CONF_NAME
+)
+from homeassistant.helpers import collection
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components.input_datetime import (
+    InputDatetime,
+    CONF_HAS_DATE,
+    CONF_HAS_TIME,
+    CONF_INITIAL,
+    ATTR_DATETIME,
+    SERVICE_SET_DATETIME
+)
+
+DOMAIN_I = "input_datetime"
+_LOGGER = logging.getLogger(__name__)
+###
+
+
+
 OPERATION_LIST = [STATE_OFF, STATE_ELECTRIC]
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
@@ -48,6 +79,19 @@ COOKER_OPERATION_LIST.append(STATE_OFF)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     kettler = hass.data[DOMAIN]["kettler"]
+
+###
+#    newdate = datetime.datetime.combine(datetime.date(1970, 1, 1), datetime.time(kettler._th, kettler._tm, 0))
+#    timer = EntityComponent(_LOGGER, DOMAIN_I, hass)
+#    id_manager = collection.IDManager()
+#    timers_collection = collection.YamlCollection(logging.getLogger(f"{__name__}.timers_collection"), id_manager)
+#    collection.attach_entity_component_collection(timer, timers_collection, InputDatetimeMod.from_yaml)
+#    await timers_collection.async_load(
+#        [{CONF_ID: 'timer_'+kettler._name, CONF_NAME:'Timer '+kettler._name,CONF_HAS_DATE:False,CONF_HAS_TIME:True,CONF_INITIAL:newdate,CONF_ICON:'mdi:sync','kettler':kettler}]
+#    )
+#    collection.attach_entity_registry_cleaner(hass, DOMAIN_I, DOMAIN_I, timers_collection)
+###
+
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2:
         async_add_entities([RedmondWaterHeater(kettler)], True)
     if kettler._type == 5:
@@ -55,6 +99,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         platform = entity_platform.current_platform.get()
         platform.async_register_entity_service("set_timer",{vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)), vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59))},"async_set_timer",)
         platform.async_register_entity_service("set_manual_program",{vol.Required("prog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=12)), vol.Required("subprog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=3)),vol.Required("temp"): vol.All(vol.Coerce(int), vol.Range(min=30, max=180)), vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("dhours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("dminutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("heat"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1))},"async_set_manual_program",)
+
+
+
+###
+class InputDatetimeMod(InputDatetime):
+
+    def __init__(self, config: typing.Dict):
+        InputDatetime.__init__(self, config)
+        self._kettler = config.get('kettler')
+
+    async def async_set_datetime(self, date_val, time_val):
+        InputDatetime.async_set_datetime(self, date_val, time_val)
+
+        hours = int(time_val.hour)
+        minutes = int(time_val.minute)
+        _LOGGER.error('you set ' + str(hours) + ' hours and ' + str(minutes) + ' minutes')
+        self._kettler.modeOn()
+###
 
 
 
@@ -117,11 +179,11 @@ class RedmondWaterHeater(WaterHeaterDevice):
             if self._kettler._tgtemp is None:
                 return
             if self._kettler._tgtemp == 100:
-                await self._kettler.modeOn()
+                await self._kettler.async_modeOn()
             else:
-                await self._kettler.modeOn("01", self._kettler.decToHex(self._kettler._tgtemp))
+                await self._kettler.async_modeOn("01", self._kettler.decToHex(self._kettler._tgtemp))
         elif operation_mode == STATE_OFF:
-            await self._kettler.modeOff()
+            await self._kettler.async_modeOff()
 
     async def async_set_temperature(self, **kwargs):
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -210,10 +272,10 @@ class RedmondCooker(WaterHeaterDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         if operation_mode == STATE_OFF:
-            await self._kettler.modeOff()
+            await self._kettler.async_modeOff()
         else:
             program = COOKER_PROGRAMS[operation_mode]
-            await self._kettler.modeOnCook(program[0],program[1],program[2],program[3],program[4],program[5],program[6],program[7])
+            await self._kettler.async_modeOnCook(program[0],program[1],program[2],program[3],program[4],program[5],program[6],program[7])
 
     async def async_set_manual_program(self, prog=None, subprog=None, temp=None, hours=None, minutes=None, dhours=None, dminutes=None, heat=None):
         if prog == None or subprog == None or temp == None or hours == None or minutes == None or dhours == None or dminutes == None or heat == None:
@@ -227,7 +289,7 @@ class RedmondCooker(WaterHeaterDevice):
             dhoursh = self._kettler.decToHex(dhours)
             dminutesh = self._kettler.decToHex(dminutes)
             heath = self._kettler.decToHex(heat)
-            await self._kettler.modeOnCook(progh,subprogh,temph,hoursh,minutesh,dhoursh,dminutesh,heath)
+            await self._kettler.async_modeOnCook(progh,subprogh,temph,hoursh,minutesh,dhoursh,dminutesh,heath)
         except:
             pass
 
@@ -237,7 +299,7 @@ class RedmondCooker(WaterHeaterDevice):
         try:
             hoursh = self._kettler.decToHex(hours)
             minutesh = self._kettler.decToHex(minutes)
-            await self._kettler.modeTimeCook(hoursh,minutesh)
+            await self._kettler.async_modeTimeCook(hoursh,minutesh)
         except:
             pass
 
@@ -245,7 +307,7 @@ class RedmondCooker(WaterHeaterDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        await self._kettler.modeTempCook(self._kettler.decToHex(temperature))
+        await self._kettler.async_modeTempCook(self._kettler.decToHex(temperature))
 
     @property
     def min_temp(self):

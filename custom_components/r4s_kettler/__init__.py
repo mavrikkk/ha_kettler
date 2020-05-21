@@ -5,6 +5,8 @@
 from re import search
 from bluepy import btle
 import binascii
+import asyncio
+from functools import wraps, partial
 
 from time import sleep
 import time
@@ -31,7 +33,7 @@ CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
 
-SUPPORTED_DEVICES = {'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-M216S':2, 'RMC-M800S':5}
+SUPPORTED_DEVICES = {'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-M216S':2, 'RMC-M800S':5}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ async def async_setup_entry(hass, config_entry):
     )
 
     try:
-        await kettler.firstConnect()
+        await kettler.async_firstConnect()
     except:
         _LOGGER.error("Connect to Kettler %s through device %s failed", mac, device)
         return False
@@ -175,6 +177,15 @@ class RedmondKettler:
 
 
 
+    def async_wrap(self, func):
+        @wraps(func)
+        async def run(*args, loop=None, executor=None, **kwargs):
+            if loop is None:
+                loop = asyncio.get_event_loop()
+            pfunc = partial(func, *args, **kwargs)
+            return await loop.run_in_executor(executor, pfunc)
+        return run
+
     def handle_notification(self, data):
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
@@ -258,7 +269,7 @@ class RedmondKettler:
 
 
     async def async_update(self, now, **kwargs) -> None:
-        await self.modeUpdate()
+        await self.async_modeUpdate()
 
 
 
@@ -410,7 +421,7 @@ class RedmondKettler:
 
 
 ### composite methods
-    async def startNightColor(self, i=0):
+    def startNightColor(self, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -435,12 +446,15 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.startNightColor(i)
+                answ = self.startNightColor(i)
             else:
                 _LOGGER.warning('five attempts of startNightColor failed')
         return answ
 
-    async def modeOn(self, mode = "00", temp = "00", i=0):
+    async def async_startNightColor(self):
+        self.async_wrap(self.startNightColor(i=0))
+
+    def modeOn(self, mode = "00", temp = "00", i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -464,12 +478,15 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeOn(mode,temp,i)
+                answ = self.modeOn(mode,temp,i)
             else:
                 _LOGGER.warning('five attempts of modeOn failed')
         return answ
 
-    async def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01', i=0):
+    async def async_modeOn(self, mode = "00", temp = "00"):
+        self.async_wrap(self.modeOn(mode, temp, i=0))
+
+    def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01', i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -493,12 +510,15 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i)
+                answ = self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i)
             else:
                 _LOGGER.warning('five attempts of modeOn failed')
         return answ
 
-    async def modeTempCook(self, temp, i=0):
+    async def async_modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01'):
+        self.async_wrap(self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i=0))
+
+    def modeTempCook(self, temp, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -514,12 +534,15 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeTempCook(temp, i)
+                answ = self.modeTempCook(temp, i)
             else:
                 _LOGGER.warning('five attempts of modeTempCook failed')
         return answ
 
-    async def modeTimeCook(self, hours, minutes, i=0):
+    async def async_modeTempCook(self, temp):
+        self.async_wrap(self.modeTempCook(temp, i=0))
+
+    def modeTimeCook(self, hours, minutes, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -535,12 +558,15 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeTimeCook(hours, minutes, i)
+                answ = self.modeTimeCook(hours, minutes, i)
             else:
                 _LOGGER.warning('five attempts of modeTimeCook failed')
         return answ
 
-    async def modeOff(self, i=0):
+    async def async_modeTimeCook(self, hours, minutes):
+        self.async_wrap(self.modeTimeCook(hours, minutes, i=0))
+
+    def modeOff(self, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -556,13 +582,16 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeOff(i)
+                answ = self.modeOff(i)
             else:
                 _LOGGER.warning('five attempts of modeOff failed')
         return answ
 
-    async def firstConnect(self, i=0):
-        await self.findType()
+    async def async_modeOff(self):
+        self.async_wrap(self.modeOff(i=0))
+
+    def firstConnect(self, i=0):
+        self.findType()
         iter = 0
         self._connected = False
         answ = False
@@ -586,11 +615,14 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                await self.firstConnect(i)
+                self.firstConnect(i)
             else:
                 _LOGGER.warning('five attempts of firstConnect failed')
 
-    async def findType(self):
+    async def async_firstConnect(self):
+        self.async_wrap(self.firstConnect(i=0))
+
+    def findType(self):
         try:
             match_result = search(r'hci([\d]+)', self._device)
             if match_result is None:
@@ -606,7 +638,7 @@ class RedmondKettler:
         except:
             _LOGGER.error('unable to know the type of device...use default')
 
-    async def modeUpdate(self, i=0):
+    def modeUpdate(self, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -622,7 +654,10 @@ class RedmondKettler:
         if not answ:
             i=i+1
             if i<5:
-                answ = await self.modeUpdate(i)
+                answ = self.modeUpdate(i)
             else:
                 _LOGGER.warning('five attempts of modeUpdate failed')
         return answ
+
+    async def async_modeUpdate(self):
+        self.async_wrap(self.modeUpdate(i=0))

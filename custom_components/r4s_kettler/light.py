@@ -62,10 +62,10 @@ class RedmondLight(Light):
         if ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
         self._kettler._rgb1 = self._kettler.hs_to_rgbhex(self._hs)
-        await self._kettler.startNightColor()
+        await self._kettler.async_startNightColor()
 
     async def async_turn_off(self, **kwargs):
-        await self._kettler.modeOff()
+        await self._kettler.async_modeOff()
 
     @property
     def unique_id(self):
