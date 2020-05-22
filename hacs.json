@@ -1,4 +1,4 @@
 {
-    "name": "r4s_kettler",
-    "domains": ["water_heater", "sensor", "light", "switch"]
+    "name": "ready4sky",
+    "domains": ["water_heater", "sensor", "light"]
 }
