@@ -7,7 +7,7 @@ After every update remove integration from HA and then add it again! После 
 
 **What's new:**
 
-2020/05/22 Minor bug fixes and improvements. +speed, +stability, -freezes.
+2020/05/22 Minor bug fixes and improvements. +speed, +stability, -freezes. Rename r4s_kettler to ready4sky (now is not only kettle). Delete old intefration from UI before install this!
 
 2020/05/14 Minor bug fixes and improvements. integration some other models. add Cooker!
 
