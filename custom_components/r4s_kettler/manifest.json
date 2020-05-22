@@ -1,9 +1,0 @@
-{
-  "domain": "r4s_kettler",
-  "name": "r4s_kettler",
-  "documentation": "https://github.com/mavrikkk/ha_kettler/blob/master/README.md",
-  "dependencies": [],
-  "codeowners": ["@mavrikk"],
-  "requirements": ["bluepy"],
-  "config_flow": true
-}
