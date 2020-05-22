@@ -6,7 +6,7 @@ from re import search
 from bluepy import btle
 import binascii
 import asyncio
-from functools import wraps, partial
+from functools import partial
 
 from time import sleep
 import time
@@ -452,7 +452,7 @@ class RedmondKettler:
         return answ
 
     async def async_startNightColor(self):
-        self.async_wrap(self.startNightColor(i=0))
+        await self.hass.async_add_executor_job(self.startNightColor)
 
     def modeOn(self, mode = "00", temp = "00", i=0):
         answ = False
@@ -484,7 +484,7 @@ class RedmondKettler:
         return answ
 
     async def async_modeOn(self, mode = "00", temp = "00"):
-        self.async_wrap(self.modeOn(mode, temp, i=0))
+        await self.hass.async_add_executor_job(partial(self.modeOn, mode, temp, 0))
 
     def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01', i=0):
         answ = False
@@ -516,7 +516,7 @@ class RedmondKettler:
         return answ
 
     async def async_modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01'):
-        self.async_wrap(self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i=0))
+        await self.hass.async_add_executor_job(partial(self.modeOnCook, prog, sprog, temp, hours, minutes, dhours, dminutes, heat, 0))
 
     def modeTempCook(self, temp, i=0):
         answ = False
@@ -540,7 +540,7 @@ class RedmondKettler:
         return answ
 
     async def async_modeTempCook(self, temp):
-        self.async_wrap(self.modeTempCook(temp, i=0))
+        await self.hass.async_add_executor_job(partial(self.modeTempCook, temp, 0))
 
     def modeTimeCook(self, hours, minutes, i=0):
         answ = False
@@ -564,7 +564,7 @@ class RedmondKettler:
         return answ
 
     async def async_modeTimeCook(self, hours, minutes):
-        self.async_wrap(self.modeTimeCook(hours, minutes, i=0))
+        await self.hass.async_add_executor_job(partial(self.modeTimeCook, hours, minutes, 0))
 
     def modeOff(self, i=0):
         answ = False
@@ -588,7 +588,7 @@ class RedmondKettler:
         return answ
 
     async def async_modeOff(self):
-        self.async_wrap(self.modeOff(i=0))
+        await self.hass.async_add_executor_job(self.modeOff)
 
     def firstConnect(self, i=0):
         self.findType()
@@ -620,7 +620,7 @@ class RedmondKettler:
                 _LOGGER.warning('five attempts of firstConnect failed')
 
     async def async_firstConnect(self):
-        self.async_wrap(self.firstConnect(i=0))
+        await self.hass.async_add_executor_job(self.firstConnect)
 
     def findType(self):
         try:
@@ -638,7 +638,7 @@ class RedmondKettler:
         except:
             _LOGGER.error('unable to know the type of device...use default')
 
-    def modeUpdate(self, i=0):
+    async def modeUpdate(self, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -648,7 +648,7 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                async_dispatcher_send(self.hass, DOMAIN)
+                                await async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -660,4 +660,4 @@ class RedmondKettler:
         return answ
 
     async def async_modeUpdate(self):
-        self.async_wrap(self.modeUpdate(i=0))
+        self.hass.async_create_task(self.modeUpdate(i=0))
