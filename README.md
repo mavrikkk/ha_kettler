@@ -9,6 +9,8 @@ After every update remove integration from HA and then add it again! После 
 
 **What's new:**
 
+2020/05/22 Minor bug fixes and improvements. +speed, +stability, -freezes.
+
 2020/05/14 Minor bug fixes and improvements. integration some other models. add Cooker!
 
 2020/05/06 Minor bug fixes and improvements. integration some other models. The name of the device is the model of kettle. Removed Authorize switch. Autorization is in the config flow. Turn on or turn off backlight is in the config flow !!!ATTENTION!!! In this version, some functions are cut down (there are no statistics on power-ups and energy costs, there is no HOLD mode)
