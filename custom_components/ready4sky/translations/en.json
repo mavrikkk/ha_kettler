@@ -1,0 +1,30 @@
+{
+  "config": {
+    "title": "Redmond SkyKettle",
+    "step": {
+      "user": {
+        "title": "Setup a new device",
+        "description": "Details can be found here:\nhttps://github.com/mavrikkk/ha_kettler/blob/master/README.md",
+        "data": {
+          "device": "Bluetooth device",
+          "mac": "Device's name and address",
+          "password": "Password (8 byte length and HEX)",
+          "scan_interval": "Scan interval (from 10 to 300 seconds)",
+          "use_backlight": "use backlight in standby mode (for supported devices)"
+        }
+      },
+      "info": {
+        "title": "First connect to device...",
+        "description": "put the device into pairing mode according to the instructions, and then press CONFIRM"
+      }
+    },
+    "error": {
+      "wrong_password": "Password is not valid (8 byte length and HEX)",
+      "wrong_mac": "MAC is malformed",
+      "wrong_scan_interval": "Scan interval should be from 10 to 300 seconds"
+    },
+    "abort": {
+      "already_configured": "Integration for this device is already configured"
+    }
+  }
+}
