@@ -11,6 +11,16 @@ set_timer:
       description: Number of minutes for the timer.
       example: 30
 
+set_input_timer:
+  description: Set cooker timer.
+  fields:
+    entity_id:
+      description: Name of entity input datetime.
+      example: "input_datetime.rmc800"
+    time:
+      description: Hours and minutes for the timer.
+      example: 10:10:00
+
 set_manual_program:
   description: Set manual program.
   fields:

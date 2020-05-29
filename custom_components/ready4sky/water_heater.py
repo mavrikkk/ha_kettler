@@ -4,7 +4,7 @@
 from . import DOMAIN
 
 import voluptuous as vol
-
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     SUPPORT_TARGET_TEMPERATURE,
@@ -22,6 +22,8 @@ from homeassistant.helpers import entity_platform
 
 
 ###
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 import logging
 import typing
 import datetime
@@ -90,6 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 #        [{CONF_ID: 'timer_'+kettler._name, CONF_NAME:'Timer '+kettler._name,CONF_HAS_DATE:False,CONF_HAS_TIME:True,CONF_INITIAL:newdate,CONF_ICON:'mdi:sync','kettler':kettler}]
 #    )
 #    collection.attach_entity_registry_cleaner(hass, DOMAIN_I, DOMAIN_I, timers_collection)
+#    timer.async_register_entity_service("set_datetime",{vol.Required("time"): cv.time},"async_set_datetime",)
 ###
 
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2:
@@ -106,16 +109,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class InputDatetimeMod(InputDatetime):
 
     def __init__(self, config: typing.Dict):
-        InputDatetime.__init__(self, config)
+        self._config = config
+        self.editable = True
+        self._current_datetime = None
         self._kettler = config.get('kettler')
+        if self._kettler != None:
+            self._current_datetime = datetime.datetime.combine(datetime.date(1970, 1, 1), datetime.time(self._kettler._th, self._kettler._tm, 0))
 
-    async def async_set_datetime(self, date_val, time_val):
-        InputDatetime.async_set_datetime(self, date_val, time_val)
-
-        hours = int(time_val.hour)
-        minutes = int(time_val.minute)
-        _LOGGER.error('you set ' + str(hours) + ' hours and ' + str(minutes) + ' minutes')
-        self._kettler.modeOn()
+    @callback
+    async def async_set_datetime(self, time='00:00:00'):
+        self._current_datetime = datetime.datetime.combine(self._current_datetime.date(), time)
+        self.async_write_ha_state()
+        hours = int(time.hour)
+        minutes = int(time.minute)
+        _LOGGER.error('you set timer ' + str(hours) + ':' + str(minutes))
+#        self._kettler.modeTimeCook(hours, minutes)
 ###
 
 
@@ -126,6 +134,22 @@ class RedmondWaterHeater(WaterHeaterEntity):
         self._name = 'Kettle ' + kettler._name
         self._icon = 'mdi:kettle'
         self._kettler = kettler
+        self._temp = 0
+        self._tgtemp = 0
+        self._co = ''
+
+    async def async_added_to_hass(self):
+        self._handle_update()
+        self.async_on_remove(async_dispatcher_connect(self._kettler.hass, 'ready4skyupdate', self._handle_update))
+
+    def _handle_update(self):
+        self._temp = self._kettler._temp
+        self._tgtemp = self._kettler._tgtemp
+        self._co = STATE_OFF
+        if self._kettler._mode == '00' or self._kettler._mode == '01':
+            if self._kettler._status == '02':
+                self._co = STATE_ELECTRIC
+        self.schedule_update_ha_state()
 
     @property
     def device_info(self):
@@ -135,14 +159,17 @@ class RedmondWaterHeater(WaterHeaterEntity):
             }
         }
 
-    ### for HASS
+    @property
+    def should_poll(self):
+        return False
+
     @property
     def supported_features(self):
         return SUPPORT_FLAGS_HEATER
 
     @property
     def available(self):
-        return self._kettler._connected
+        return True
 
     @property
     def temperature_unit(self):
@@ -150,11 +177,11 @@ class RedmondWaterHeater(WaterHeaterEntity):
 
     @property
     def current_temperature(self):
-        return self._kettler._temp
+        return self._temp
 
     @property
     def target_temperature(self):
-        return self._kettler._tgtemp
+        return self._tgtemp
 
     @property
     def device_state_attributes(self):
@@ -163,10 +190,7 @@ class RedmondWaterHeater(WaterHeaterEntity):
 
     @property
     def current_operation(self):
-        if self._kettler._mode == '00' or self._kettler._mode == '01':
-            if self._kettler._status == '02':
-                return STATE_ELECTRIC
-        return STATE_OFF
+        return self._co
 
     @property
     def operation_list(self):
@@ -174,14 +198,14 @@ class RedmondWaterHeater(WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode):
         if operation_mode == STATE_ELECTRIC:
-            if self._kettler._temp is None:
+            if self._temp is None:
                 return
-            if self._kettler._tgtemp is None:
+            if self._tgtemp is None:
                 return
-            if self._kettler._tgtemp == 100:
+            if self._tgtemp == 100:
                 await self._kettler.async_modeOn()
             else:
-                await self._kettler.async_modeOn("01", self._kettler.decToHex(self._kettler._tgtemp))
+                await self._kettler.async_modeOn("01", self._kettler.decToHex(self._tgtemp))
         elif operation_mode == STATE_OFF:
             await self._kettler.async_modeOff()
 
@@ -189,7 +213,7 @@ class RedmondWaterHeater(WaterHeaterEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._kettler._tgtemp = temperature
+        self._tgtemp = temperature
         await self.async_set_operation_mode(STATE_ELECTRIC)
 
     @property
@@ -222,6 +246,22 @@ class RedmondCooker(WaterHeaterEntity):
         self._name = 'Cooker ' + kettler._name
         self._icon = 'mdi:chef-hat'
         self._kettler = kettler
+        self._tgtemp = 0
+        self._co = ''
+
+    async def async_added_to_hass(self):
+        self._handle_update()
+        self.async_on_remove(async_dispatcher_connect(self._kettler.hass, 'ready4skyupdate', self._handle_update))
+
+    def _handle_update(self):
+        self._tgtemp = self._kettler._tgtemp
+        self._co = STATE_OFF
+        if self._kettler._status == '02' or self._kettler._status == '04' or self._kettler._status == '05':
+            self._co = 'MANUAL'
+            for key,value in COOKER_PROGRAMS.items():
+                if value[0] == self._kettler._prog:
+                    self._co = key
+        self.schedule_update_ha_state()
 
     @property
     def device_info(self):
@@ -231,14 +271,17 @@ class RedmondCooker(WaterHeaterEntity):
             }
         }
 
-    ### for HASS
+    @property
+    def should_poll(self):
+        return False
+
     @property
     def supported_features(self):
         return SUPPORT_FLAGS_HEATER
 
     @property
     def available(self):
-        return self._kettler._connected
+        return True
 
     @property
     def temperature_unit(self):
@@ -246,11 +289,11 @@ class RedmondCooker(WaterHeaterEntity):
 
     @property
     def current_temperature(self):
-        return self._kettler._tgtemp
+        return self._tgtemp
 
     @property
     def target_temperature(self):
-        return self._kettler._tgtemp
+        return self._tgtemp
 
     @property
     def device_state_attributes(self):
@@ -263,12 +306,7 @@ class RedmondCooker(WaterHeaterEntity):
 
     @property
     def current_operation(self):
-        if self._kettler._status == '02' or self._kettler._status == '04' or self._kettler._status == '05':
-            for key,value in COOKER_PROGRAMS.items():
-                if value[0] == self._kettler._prog:
-                    return key
-            return 'MANUAL'
-        return STATE_OFF
+        return self._co
 
     async def async_set_operation_mode(self, operation_mode):
         if operation_mode == STATE_OFF:

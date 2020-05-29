@@ -18,7 +18,7 @@ from datetime import timedelta
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval, async_call_later
 import homeassistant.util.color as color_util
 from homeassistant.const import (
     CONF_DEVICE,
@@ -79,6 +79,7 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     async_track_time_interval(hass, kettler.async_update, scan_delta)
+
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
@@ -104,13 +105,17 @@ class BTLEConnection(btle.DefaultDelegate):
         self._mac = mac
         self._callbacks = {}
 
-    def __enter__(self):
+    def __enter__(self, i=0):
         try:
             self.__exit__(None, None, None)
             self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
             self._conn.withDelegate(self)
         except:
-            pass
+            i=i+1
+            if i<5:
+                return self.__enter__(i)
+            else:
+                _LOGGER.error('unable to connect to device')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -177,15 +182,6 @@ class RedmondKettler:
 
 
 
-    def async_wrap(self, func):
-        @wraps(func)
-        async def run(*args, loop=None, executor=None, **kwargs):
-            if loop is None:
-                loop = asyncio.get_event_loop()
-            pfunc = partial(func, *args, **kwargs)
-            return await loop.run_in_executor(executor, pfunc)
-        return run
-
     def handle_notification(self, data):
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
@@ -232,6 +228,7 @@ class RedmondKettler:
                 self._tm = self.hexToDec(str(arr[9]))
                 self._mode = str(arr[10])
                 self._status = str(arr[11])
+            async_dispatcher_send(self.hass, 'ready4skyupdate')
 
     def calcMidColor(self, rgb1, rgb2):
         try:
@@ -265,11 +262,6 @@ class RedmondKettler:
         if len(char) < 2:
             char = '0' + char
         return char
-
-
-
-    async def async_update(self, now, **kwargs) -> None:
-        await self.async_modeUpdate()
 
 
 
@@ -440,7 +432,6 @@ class RedmondKettler:
                                         if self.sendStatus(conn):
                                             self._time_upd = time.strftime("%H:%M")
                                             answ = True
-                                            async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -472,7 +463,6 @@ class RedmondKettler:
                                     if self.sendStatus(conn):
                                         self._time_upd = time.strftime("%H:%M")
                                         answ = True
-                                        async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -504,7 +494,6 @@ class RedmondKettler:
                                     if self.sendStatus(conn):
                                         self._time_upd = time.strftime("%H:%M")
                                         answ = True
-                                        async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -528,7 +517,6 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -552,7 +540,6 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -576,7 +563,6 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -609,7 +595,6 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -638,7 +623,7 @@ class RedmondKettler:
         except:
             _LOGGER.error('unable to know the type of device...use default')
 
-    async def modeUpdate(self, i=0):
+    def modeUpdate(self, i=0):
         answ = False
         try:
             with self._conn as conn:
@@ -648,7 +633,6 @@ class RedmondKettler:
                             if self.sendStatus(conn):
                                 self._time_upd = time.strftime("%H:%M")
                                 answ = True
-                                await async_dispatcher_send(self.hass, DOMAIN)
         except:
             pass
         if not answ:
@@ -660,4 +644,8 @@ class RedmondKettler:
         return answ
 
     async def async_modeUpdate(self):
-        self.hass.async_create_task(self.modeUpdate(i=0))
+#        self.hass.async_create_task(self.modeUpdate(i=0))
+        await self.hass.async_add_executor_job(self.modeUpdate)
+
+    async def async_update(self, now, **kwargs) -> None:
+        await self.async_modeUpdate()

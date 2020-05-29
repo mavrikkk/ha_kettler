@@ -4,6 +4,6 @@
   "documentation": "https://github.com/mavrikkk/ha_kettler/blob/master/README.md",
   "dependencies": [],
   "codeowners": ["@mavrikk"],
-  "requirements": [],
+  "requirements": ["bluepy"],
   "config_flow": true
 }
