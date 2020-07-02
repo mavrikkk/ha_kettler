@@ -216,6 +216,12 @@ class RedmondWaterHeater(WaterHeaterEntity):
         self._tgtemp = temperature
         await self.async_set_operation_mode(STATE_ELECTRIC)
 
+    async def async_turn_on(self):
+        self.async_set_operation_mode(STATE_ELECTRIC)
+
+    async def async_turn_off(self):
+        self.async_set_operation_mode(STATE_OFF)
+
     @property
     def min_temp(self):
         return self._kettler._mntemp
