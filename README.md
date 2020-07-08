@@ -7,6 +7,8 @@ allows you to connect Redmond SkyKettle (tested devices: RK-M173S, RK-G200S, RK-
 
 After every update remove integration from HA and then add it again! После обновления модуля лучше удалить интеграцию из интерфейса HA и заново добавить ее.
 
+BAD NEWS about my attempt to use BLEAK (https://github.com/hbldh/bleak) async libriry:   https://github.com/home-assistant/core/issues/37593
+
 **What's new:**
 
 2020/05/29 Minor bug fixes and improvements. No more lags in interface, if disconnect device from power strip. states update immediatly.
