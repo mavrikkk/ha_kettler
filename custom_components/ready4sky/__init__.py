@@ -37,7 +37,7 @@ SUPPORTED_DEVICES = {'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ["water_heater", "sensor", "light"]
+SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch"]
 
 DOMAIN = "ready4sky"
 
