@@ -217,6 +217,9 @@ class RedmondKettler:
                     self._tgtemp = self.hexToDec(tgtemp)
                 else:
                     self._tgtemp = 100
+            if self._type == 4:
+                self._status = str(arr[11])
+                self._mode = str(arr[3])
             if self._type == 5:
                 self._prog = str(arr[3])
                 self._sprog = str(arr[4])
