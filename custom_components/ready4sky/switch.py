@@ -17,7 +17,7 @@ class RedmondSwitch(SwitchEntity):
 
     def __init__(self, kettler):
         self._name = 'Switch ' + kettler._name
-        self._icon = 'mdi:lightbulb'
+        self._icon = 'mdi:air-filter'
         self._kettler = kettler
         self._ison = False
 
@@ -29,7 +29,7 @@ class RedmondSwitch(SwitchEntity):
 
     def _handle_update(self):
         self._ison = False
-        if self._kettler._status == '02' and self._kettler._mode == '03':
+        if self._kettler._status == '02' and self._kettler._mode == '00':
             self._ison = True
         self.schedule_update_ha_state()
 
