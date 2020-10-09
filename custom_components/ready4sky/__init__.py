@@ -33,7 +33,7 @@ CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
 
-SUPPORTED_DEVICES = {'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RMC-M800S':5, 'RMC-M223S':5}
+SUPPORTED_DEVICES = {'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RFS-HPL001':4, 'RMC-M800S':5, 'RMC-M223S':5}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -284,7 +284,7 @@ class RedmondKettler:
         answ = False
         if self._type == 0:
             answ = True
-        if self._type == 1 or self._type == 2 or self._type == 5:
+        if self._type == 1 or self._type == 2 or self._type == 4 or self._type == 5:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
             if conn.make_request(14, str2b):
                 self.iterase()
@@ -301,7 +301,7 @@ class RedmondKettler:
 
     def sendSync(self, conn, timezone = 4):
         answ = False
-        if self._type == 0 or self._type == 5:
+        if self._type == 0 or self._type == 4 or self._type == 5:
             answ = True
         if self._type == 1 or self._type == 2:
             if self._use_backlight:
@@ -335,7 +335,7 @@ class RedmondKettler:
 
     def sendMode(self, conn, mode, temp):   # 00 - boil 01 - heat to temp 03 - backlight (boil by default)    temp - in HEX
         answ = False
-        if self._type == 5:
+        if self._type == 4 or self._type == 5:
             return True
         if self._type == 0:
             str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + mode + '00' + temp + '00aa', 'utf-8'))
@@ -381,7 +381,7 @@ class RedmondKettler:
 
     def sendUseBackLight(self, conn):
         answ = False
-        if self._type == 0 or self._type == 5:
+        if self._type == 0 or self._type == 4 or self._type == 5:
             answ = True
         if self._type == 1 or self._type == 2:
             onoff="00"
@@ -395,7 +395,7 @@ class RedmondKettler:
 
     def sendSetLights(self, conn, boilOrLight = '01', rgb1 = '0000ff'): # 00 - boil light    01 - backlight
         answ = False
-        if self._type == 0 or self._type == 2 or self._type == 5:
+        if self._type == 0 or self._type == 2 or self._type == 4 or self._type == 5:
             answ = True
         if self._type == 1:
             rgb_mid = rgb1
@@ -644,7 +644,6 @@ class RedmondKettler:
         return answ
 
     async def async_modeUpdate(self):
-#        self.hass.async_create_task(self.modeUpdate(i=0))
         await self.hass.async_add_executor_job(self.modeUpdate)
 
     async def async_update(self, now, **kwargs) -> None:
