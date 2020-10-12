@@ -618,7 +618,7 @@ class RedmondKettler:
             else:
                 iface = int(match_result.group(1))
                 scanner = btle.Scanner(iface=iface)
-                ble_devices = {device.addr:str(device.getValueText(9)) for device in scanner.scan(2.0)}
+                ble_devices = {device.addr:str(device.getValueText(9)) for device in scanner.scan(3.0)}
                 dev_name = ble_devices.get(self._mac, 'None')
                 self._type = SUPPORTED_DEVICES.get(dev_name, 1)
                 if dev_name != 'None':
