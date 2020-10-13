@@ -27,13 +27,13 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 
+from r4sconst import SUPPORTED_DEVICES
+
 CONF_USE_BACKLIGHT = 'use_backlight'
 
 CONF_MIN_TEMP = 40
 CONF_MAX_TEMP = 100
 CONF_TARGET_TEMP = 100
-
-SUPPORTED_DEVICES = {'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RFS-HPL001':4, 'RMC-M800S':5, 'RMC-M223S':5}
 
 _LOGGER = logging.getLogger(__name__)
 
