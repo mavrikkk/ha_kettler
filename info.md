@@ -1,5 +1,5 @@
 **Description (Описание)**
-<p>allows you to connect Redmond SkyKettle (tested devices: RK-M173S, RK-G200S, RK-G201S, RK-G202S, RK-G210S, RK-G211S, RK-G212S) and SkyCooker (tested RMC-M800S) to your Home Assistant.</p>
+<p>allows you to connect Redmond SkyKettle, SkyCooker and SkyHeat to your Home Assistant (full list of supported devices see in: https://github.com/mavrikkk/ha_kettler/blob/master/custom_components/ready4sky/r4sconst.py ).</p>
 
 **!!!ATTENTION!!!**
 
@@ -8,6 +8,8 @@ After every update remove integration from HA and then add it again! После 
 BAD NEWS about my attempt to use BLEAK (https://github.com/hbldh/bleak) async libriry:   https://github.com/home-assistant/core/issues/37593
 
 **What's new:**
+
+2020/10/13 Add support of SkyHeat RCH-4529S (RFS-HPL001).
 
 2020/05/29 Minor bug fixes and improvements. No more lags in interface, if disconnect device from power strip. states update immediatly.
 
