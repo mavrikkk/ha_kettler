@@ -46,7 +46,7 @@ from homeassistant.components.input_datetime import (
     SERVICE_SET_DATETIME
 )
 
-from r4sconst import COOKER_PROGRAMS
+from .r4sconst import COOKER_PROGRAMS
 
 DOMAIN_I = "input_datetime"
 _LOGGER = logging.getLogger(__name__)
