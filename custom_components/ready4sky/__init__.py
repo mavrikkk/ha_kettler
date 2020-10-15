@@ -27,7 +27,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 
-from r4sconst import SUPPORTED_DEVICES
+from .r4sconst import SUPPORTED_DEVICES
 
 CONF_USE_BACKLIGHT = 'use_backlight'
 
