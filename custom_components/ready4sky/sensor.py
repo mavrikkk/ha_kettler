@@ -34,12 +34,15 @@ class RedmondSensor(Entity):
     def _handle_update(self):
         self._state = 'OFF'
         if self._kettler._status == '02':
-            if self._kettler._mode == '00':
-                self._state = 'BOIL'
-            if self._kettler._mode == '01':
-                self._state = 'HEAT'
-            if self._kettler._mode == '03':
-                self._state = 'LIGHT'
+            if self._kettler._type == 4:
+                self._state = 'ON'
+            else:
+                if self._kettler._mode == '00':
+                    self._state = 'BOIL'
+                if self._kettler._mode == '01':
+                    self._state = 'HEAT'
+                if self._kettler._mode == '03':
+                    self._state = 'LIGHT'
         self._sync = str(self._kettler._time_upd)
         self.schedule_update_ha_state()
 
