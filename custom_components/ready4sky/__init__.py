@@ -186,7 +186,7 @@ class RedmondKettler:
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
         if arr[2] == 'ff': ### sendAuth
-            if self._type == 0 or self._type == 1 or self._type == 5:
+            if self._type == 0 or self._type == 1 or self._type == 4 or self._type == 5:
                 if arr[3] == '01':
                     self._connected = True
                 else:
