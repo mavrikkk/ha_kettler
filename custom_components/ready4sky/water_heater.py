@@ -43,7 +43,7 @@ from homeassistant.components.input_datetime import (
     CONF_HAS_TIME,
     CONF_INITIAL,
     ATTR_DATETIME,
-    SERVICE_SET_DATETIME
+#    SERVICE_SET_DATETIME
 )
 
 from .r4sconst import COOKER_PROGRAMS
