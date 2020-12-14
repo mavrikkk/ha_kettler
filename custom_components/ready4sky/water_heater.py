@@ -42,7 +42,7 @@ from homeassistant.components.input_datetime import (
     CONF_HAS_DATE,
     CONF_HAS_TIME,
     CONF_INITIAL,
-    ATTR_DATETIME,
+    ATTR_DATETIME
 #    SERVICE_SET_DATETIME
 )
 
