@@ -37,18 +37,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import collection
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components.input_datetime import (
-    InputDatetime,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
-    CONF_INITIAL,
-    ATTR_DATETIME
-#    SERVICE_SET_DATETIME
-)
 
 from .r4sconst import COOKER_PROGRAMS
 
-DOMAIN_I = "input_datetime"
 _LOGGER = logging.getLogger(__name__)
 ###
 
@@ -64,19 +55,6 @@ COOKER_OPERATION_LIST.append(STATE_OFF)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     kettler = hass.data[DOMAIN]["kettler"]
 
-###
-#    newdate = datetime.datetime.combine(datetime.date(1970, 1, 1), datetime.time(kettler._th, kettler._tm, 0))
-#    timer = EntityComponent(_LOGGER, DOMAIN_I, hass)
-#    id_manager = collection.IDManager()
-#    timers_collection = collection.YamlCollection(logging.getLogger(f"{__name__}.timers_collection"), id_manager)
-#    collection.attach_entity_component_collection(timer, timers_collection, InputDatetimeMod.from_yaml)
-#    await timers_collection.async_load(
-#        [{CONF_ID: 'timer_'+kettler._name, CONF_NAME:'Timer '+kettler._name,CONF_HAS_DATE:False,CONF_HAS_TIME:True,CONF_INITIAL:newdate,CONF_ICON:'mdi:sync','kettler':kettler}]
-#    )
-#    collection.attach_entity_registry_cleaner(hass, DOMAIN_I, DOMAIN_I, timers_collection)
-#    timer.async_register_entity_service("set_datetime",{vol.Required("time"): cv.time},"async_set_datetime",)
-###
-
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2:
         async_add_entities([RedmondWaterHeater(kettler)], True)
     if kettler._type == 5:
@@ -86,27 +64,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         platform.async_register_entity_service("set_manual_program",{vol.Required("prog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=12)), vol.Required("subprog"): vol.All(vol.Coerce(int), vol.Range(min=0, max=3)),vol.Required("temp"): vol.All(vol.Coerce(int), vol.Range(min=30, max=180)), vol.Required("hours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("dhours"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),vol.Required("dminutes"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)), vol.Required("heat"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1))},"async_set_manual_program",)
 
 
-
-###
-class InputDatetimeMod(InputDatetime):
-
-    def __init__(self, config: typing.Dict):
-        self._config = config
-        self.editable = True
-        self._current_datetime = None
-        self._kettler = config.get('kettler')
-        if self._kettler != None:
-            self._current_datetime = datetime.datetime.combine(datetime.date(1970, 1, 1), datetime.time(self._kettler._th, self._kettler._tm, 0))
-
-    @callback
-    async def async_set_datetime(self, time='00:00:00'):
-        self._current_datetime = datetime.datetime.combine(self._current_datetime.date(), time)
-        self.async_write_ha_state()
-        hours = int(time.hour)
-        minutes = int(time.minute)
-        _LOGGER.error('you set timer ' + str(hours) + ':' + str(minutes))
-#        self._kettler.modeTimeCook(hours, minutes)
-###
 
 
 
