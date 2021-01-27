@@ -3,6 +3,8 @@
 
 from . import DOMAIN
 
+from homeassistant.const import CONF_MAC
+
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_HS_COLOR,
@@ -14,7 +16,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    kettler = hass.data[DOMAIN]["kettler"]
+    mac = config_entry.get(CONF_MAC)
+    kettler = hass.data[DOMAIN][mac]
     if kettler._type == 1:
         async_add_entities([RedmondLight(kettler)], True)
 
