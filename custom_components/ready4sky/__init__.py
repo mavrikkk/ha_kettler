@@ -95,6 +95,12 @@ async def async_remove_entry(hass, entry):
     except ValueError:
         pass
 
+async def async_unload_entry(hass, entry):
+    try:
+        for domain in SUPPORTED_DOMAINS:
+            await hass.config_entries.async_forward_entry_unload(entry, domain)
+    except ValueError:
+        pass
 
 
 class BTLEConnection(btle.DefaultDelegate):
