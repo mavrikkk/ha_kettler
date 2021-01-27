@@ -9,7 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    mac = config_entry.get(CONF_MAC)
+    config = config_entry.data
+    mac = config.get(CONF_MAC)
     kettler = hass.data[DOMAIN][mac]
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2 or kettler._type == 4:
         async_add_entities([RedmondSensor(kettler)], True)
