@@ -11,6 +11,8 @@ BAD NEWS about my attempt to use BLEAK (https://github.com/hbldh/bleak) async li
 
 **What's new:**
 
+2021/01/27 Add multi-device support (for tests).
+
 2020/10/13 Add support for SkyHeat RCH-4529S (RFS-HPL001).
 
 2020/05/29 Minor bug fixes and improvements. No more lags in interface, if disconnect device from power strip. states update immediatly.
