@@ -54,7 +54,8 @@ COOKER_OPERATION_LIST.append(STATE_OFF)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    mac = config_entry.get(CONF_MAC)
+    config = config_entry.data
+    mac = config.get(CONF_MAC)
     kettler = hass.data[DOMAIN][mac]
 
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2:
