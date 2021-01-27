@@ -64,7 +64,7 @@ async def async_setup_entry(hass, config_entry):
         manufacturer="Redmond"
     )
 
-    kettler = hass.data[DOMAIN]["kettler"] = RedmondKettler(
+    kettler = hass.data[DOMAIN][mac] = RedmondKettler(
         hass,
         mac,
         password,
@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
+            hass.config_entries.async_forward_entry_setup(config, domain)
         )
 
     return True
