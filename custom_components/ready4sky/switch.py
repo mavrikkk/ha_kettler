@@ -2,14 +2,15 @@
 # coding: utf-8
 
 from . import DOMAIN
-
+from homeassistant.const import CONF_MAC
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    kettler = hass.data[DOMAIN]["kettler"]
+    mac = config_entry.get(CONF_MAC)
+    kettler = hass.data[DOMAIN][mac]
     if kettler._type == 4:
         async_add_entities([RedmondSwitch(kettler)], True)
 
