@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config, domain)
+            hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
     return True
