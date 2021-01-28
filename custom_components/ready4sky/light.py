@@ -16,9 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    config = config_entry.data
-    mac = config.get(CONF_MAC)
-    kettler = hass.data[DOMAIN][mac]
+    kettler = hass.data[DOMAIN][config_entry.entry_id]
     if kettler._type == 1:
         async_add_entities([RedmondLight(kettler)], True)
 
