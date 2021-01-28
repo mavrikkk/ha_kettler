@@ -12,7 +12,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config = config_entry.data
     mac = config.get(CONF_MAC)
     kettler = hass.data[DOMAIN][mac]
-    if kettler._type == 0 or kettler._type == 1 or kettler._type == 2 or kettler._type == 4:
+    if kettler._type == 0 or kettler._type == 1 or kettler._type == 2 or kettler._type == 3 or kettler._type == 4:
         async_add_entities([RedmondSensor(kettler)], True)
     if kettler._type == 5:
         async_add_entities([RedmondCooker(kettler)], True)
@@ -37,7 +37,7 @@ class RedmondSensor(Entity):
     def _handle_update(self):
         self._state = 'OFF'
         if self._kettler._status == '02':
-            if self._kettler._type == 4:
+            if self._kettler._type == 3 or self._kettler._type == 4:
                 self._state = 'ON'
             else:
                 if self._kettler._mode == '00':
