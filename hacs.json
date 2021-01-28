@@ -1,4 +1,4 @@
 {
     "name": "ready4sky",
-    "domains": ["water_heater", "sensor", "light", "switch"]
+    "domains": ["water_heater", "sensor", "light", "switch", "fan"]
 }
