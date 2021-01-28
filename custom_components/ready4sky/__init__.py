@@ -64,7 +64,7 @@ async def async_setup_entry(hass, config_entry):
         manufacturer="Redmond"
     )
 
-    kettler = hass.data[DOMAIN][mac] = RedmondKettler(
+    kettler = hass.data[DOMAIN][config_entry.entry_id] = RedmondKettler(
         hass,
         mac,
         password,
