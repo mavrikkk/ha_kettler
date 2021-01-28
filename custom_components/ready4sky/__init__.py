@@ -182,7 +182,7 @@ class RedmondKettler:
         self._pm = 0 #  program min
         self._th = 0 #  timer hours
         self._tm = 0 #  timer min
-        self._ion = False
+        self._ion = '00' # 00 - off   01 - on
         self._connected = False
         self._conn = BTLEConnection(self._mac)
         self._conn.set_callback(11, self.handle_notification)
