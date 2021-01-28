@@ -54,9 +54,7 @@ COOKER_OPERATION_LIST.append(STATE_OFF)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    config = config_entry.data
-    mac = config.get(CONF_MAC)
-    kettler = hass.data[DOMAIN][mac]
+    kettler = hass.data[DOMAIN][config_entry.entry_id]
 
     if kettler._type == 0 or kettler._type == 1 or kettler._type == 2:
         async_add_entities([RedmondWaterHeater(kettler)], True)
