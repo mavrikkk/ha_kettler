@@ -37,7 +37,7 @@ CONF_TARGET_TEMP = 100
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch"]
+SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch", "fan"]
 
 DOMAIN = "ready4sky"
 
@@ -193,7 +193,7 @@ class RedmondKettler:
         s = binascii.b2a_hex(data).decode("utf-8")
         arr = [s[x:x+2] for x in range (0, len(s), 2)]
         if arr[2] == 'ff': ### sendAuth
-            if self._type == 0 or self._type == 1 or self._type == 4 or self._type == 5:
+            if self._type == 0 or self._type == 1 or self._type == 3 or self._type == 4 or self._type == 5:
                 if arr[3] == '01':
                     self._connected = True
                 else:
@@ -224,6 +224,10 @@ class RedmondKettler:
                     self._tgtemp = self.hexToDec(tgtemp)
                 else:
                     self._tgtemp = 100
+            if self._type == 3:
+                self._status = str(arr[11])
+                self._mode = str(arr[5])
+                self._ion = str(arr[14])
             if self._type == 4:
                 self._status = str(arr[11])
                 self._mode = str(arr[3])
