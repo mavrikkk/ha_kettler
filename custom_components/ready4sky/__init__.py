@@ -573,7 +573,7 @@ class RedmondKettler:
                         if self.sendTempCook(conn, speed):
                             if self.sendAfterSpeed(conn):
                                 if self._status == '00':
-                                    self.sendOn(conn)
+                                    answ1 = self.sendOn(conn)
                                 if self.sendStatus(conn):
                                     self._time_upd = time.strftime("%H:%M")
                                     answ = True
