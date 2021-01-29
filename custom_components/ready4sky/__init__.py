@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     if config_entry.unique_id is None:
         hass.config_entries.async_update_entry(config_entry, unique_id=f'{DOMAIN}[{mac}]')
     
-    async_track_time_interval(hass, kettler.async_update, scan_delta)
+    async_track_time_interval(hass, hass.data[DOMAIN][config_entry.entry_id].async_update, scan_delta)
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
