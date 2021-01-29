@@ -39,7 +39,7 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
         return self.show_form()
 
     async def async_step_info(self, user_input={}):
-        return await self.create_entry()
+        return await self.create_entryS()
 
     def show_form(self, user_input={}, errors={}):
         device = user_input.get(CONF_DEVICE, DEFAULT_DEVICE)
@@ -61,7 +61,7 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
     def show_form_info(self):
         return self.async_show_form(step_id='info')
 
-    async def create_entry(self):
+    async def create_entryS(self):
         mac = self.data.get(CONF_MAC)
         identifier = f'{DOMAIN}[{mac}]'
         await self.async_set_unique_id(identifier)
