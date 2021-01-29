@@ -395,6 +395,17 @@ class RedmondKettler:
             answ  = True
         return answ
 
+    def sendAfterSpeed(self, conn):
+        answ = False
+        if self._type == 3:
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '0900aa', 'utf-8'))
+            if conn.make_request(14, str2b):
+                self.iterase()
+                answ = True
+        else:
+            answ  = True
+        return answ
+
     def sendUseBackLight(self, conn):
         answ = False
         if self._type == 0 or self._type == 3 or self._type == 4 or self._type == 5:
@@ -553,9 +564,12 @@ class RedmondKettler:
                 if self.sendResponse(conn):
                     if self.sendAuth(conn):
                         if self.sendTempCook(conn, speed):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
+                            if self.sendAfterSpeed(conn):
+                                if self._status == '00':
+                                    self.sendOn(conn)
+                                if self.sendStatus(conn):
+                                    self._time_upd = time.strftime("%H:%M")
+                                    answ = True
         except:
             pass
         if not answ:
@@ -563,7 +577,7 @@ class RedmondKettler:
             if i<5:
                 answ = self.modeFan(speed, i)
             else:
-                _LOGGER.warning('five attempts of modeTempCook failed')
+                _LOGGER.warning('five attempts of modeFan failed')
         return answ
 
     async def async_modeFan(self, speed):
