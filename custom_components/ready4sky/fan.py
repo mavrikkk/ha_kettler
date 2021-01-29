@@ -92,12 +92,8 @@ class RedmondFan(FanEntity):
         return True
 
     @property
-    def speed(self) -> str:
-        return self.cur_speed
-
-    @property
-    def speed_list(self) -> list:
-        return self.speeds
+    def percentage(self) -> int:
+        return self._perc
 
     @property
     def supported_features(self) -> int:
