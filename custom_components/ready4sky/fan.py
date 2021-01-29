@@ -10,7 +10,6 @@ from homeassistant.components.fan import (
     FanEntity
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
 ORDERED_NAMED_FAN_SPEEDS = ['01', '02', '03', '04', '05', '06']  # off is not included
 
 
