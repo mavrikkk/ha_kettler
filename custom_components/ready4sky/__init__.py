@@ -16,6 +16,8 @@ import logging
 
 from datetime import timedelta
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, async_call_later
@@ -44,7 +46,7 @@ DOMAIN = "ready4sky"
 async def async_setup(hass, config):
     return True
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     hass.data[DOMAIN] = {}
 
     config = config_entry.data
@@ -55,29 +57,21 @@ async def async_setup_entry(hass, config_entry):
     scan_delta = timedelta(seconds=config.get(CONF_SCAN_INTERVAL))
     backlight = config.get(CONF_USE_BACKLIGHT)
 
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-        name="ReadyForSky",
-        model="ReadyForSky",
-        manufacturer="Redmond"
-    )
-
-    kettler = hass.data[DOMAIN][config_entry.entry_id] = RedmondKettler(
-        hass,
-        mac,
-        password,
-        device,
-        backlight
-    )
+    kettler = RedmondKettler(hass, mac, password, device, backlight)
 
     try:
         await kettler.async_firstConnect()
+        if not kettler._connected:
+            return False
     except:
-        _LOGGER.error("Connect to Kettler %s through device %s failed", mac, device)
+        _LOGGER.error("Connect to %s through device %s failed", mac, device)
         return False
-
+    
+    hass.data[DOMAIN][config_entry.entry_id] = kettler
+    
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(config_entry, unique_id=f'{DOMAIN}[{mac}]')
+    
     async_track_time_interval(hass, kettler.async_update, scan_delta)
 
     for domain in SUPPORTED_DOMAINS:
@@ -87,6 +81,8 @@ async def async_setup_entry(hass, config_entry):
 
     return True
 
+
+
 async def async_remove_entry(hass, entry):
     try:
         for domain in SUPPORTED_DOMAINS:
@@ -94,6 +90,8 @@ async def async_remove_entry(hass, entry):
     except ValueError:
         pass
 
+    
+    
 async def async_unload_entry(hass, entry):
     try:
         for domain in SUPPORTED_DOMAINS:
