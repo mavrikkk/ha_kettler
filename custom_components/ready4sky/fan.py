@@ -38,7 +38,7 @@ class RedmondFan(FanEntity):
 
     def _handle_update(self):
         self._ison = False
-        if self._kettler._mode = '00' or self._kettler._status = '00':
+        if self._kettler._mode == '00' or self._kettler._status == '00':
             self._perc = 0
         else:
             self._perc = ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._kettler._mode)
@@ -47,7 +47,7 @@ class RedmondFan(FanEntity):
         self.schedule_update_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
-        if percentage = 0:
+        if percentage == 0:
             await self.async_turn_off()
         else:
             speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
