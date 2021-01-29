@@ -2,7 +2,11 @@
 # coding: utf-8
 
 from . import DOMAIN
-from homeassistant.util.percentage import ordered_list_item_to_percentage, percentage_to_ordered_list_item
+
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from homeassistant.const import CONF_MAC
 from homeassistant.components.fan import (
