@@ -25,8 +25,8 @@ class RedmondFan(FanEntity):
         self._icon = 'mdi:fan'
         self._kettler = kettler
         self._ison = False
-        self.speeds = ['00', '01', '02', '03', '04', '05', '06']
-        self.cur_speed = '00'
+        self.speeds = ['01', '02', '03', '04', '05', '06']
+        self.cur_speed = '01'
 
 
 
@@ -42,18 +42,13 @@ class RedmondFan(FanEntity):
         self.schedule_update_ha_state()
 
     async def async_set_speed(self, speed: str) -> None:
-        if speed == '00':
-            await self._kettler.async_modeOff()
-        else:
-            await self._kettler.async_modeFan(speed)
-            if not self._ison:
-                await self._kettler.async_modeOn()
+        await self._kettler.async_modeFan(speed)
                 
     async def async_turn_on(self, speed: str = None, percentage: int = None, preset_mode: str = None, **kwargs,) -> None:
         if speed is not None:
-            self.async_set_speed(speed)
+            await self.async_set_speed(speed)
         else:
-            await self._kettler.async_modeOn()
+            await self.async_set_speed('01')
 
     async def async_turn_off(self, **kwargs) -> None:
         await self._kettler.async_modeOff()
