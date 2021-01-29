@@ -10,7 +10,8 @@ from homeassistant.components.fan import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-ORDERED_NAMED_FAN_SPEEDS = ["01", "02", "03", "04", "05", "06"]  # off is not included
+ORDERED_NAMED_FAN_SPEEDS = ['01', '02', '03', '04', '05', '06']  # off is not included
+
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,7 +28,7 @@ class RedmondFan(FanEntity):
         self._icon = 'mdi:fan'
         self._kettler = kettler
         self._ison = False
-        self._perc = ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, "01")
+        self._perc = 0
 
 
 
@@ -37,7 +38,7 @@ class RedmondFan(FanEntity):
 
     def _handle_update(self):
         self._ison = False
-        if self._kettler._mode = '00':
+        if self._kettler._mode = '00' or self._kettler._status == '00':
             self._perc = 0
         else:
             self._perc = ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._kettler._mode)
