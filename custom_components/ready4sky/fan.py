@@ -38,7 +38,7 @@ class RedmondFan(FanEntity):
 
     def _handle_update(self):
         self._ison = False
-        if self._kettler._mode = '00' or self._kettler._status == '00':
+        if self._kettler._mode = '00' or self._kettler._status = '00':
             self._perc = 0
         else:
             self._perc = ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._kettler._mode)
