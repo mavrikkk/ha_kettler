@@ -20,7 +20,7 @@ ORDERED_NAMED_FAN_SPEEDS = ['01', '02', '03', '04', '05', '06']  # off is not in
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    kettler = hass.data[DOMAIN][config_entry.entry_id]
+    kettler = hass.data[DOMAIN]["devices"][config_entry.entry_id]
     if kettler._type == 3:
         async_add_entities([RedmondFan(kettler)], True)
 
