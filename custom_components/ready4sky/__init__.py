@@ -15,9 +15,7 @@ from textwrap import wrap
 import logging
 
 from datetime import timedelta
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant import config_entries, core
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, async_call_later
@@ -46,8 +44,9 @@ DOMAIN = "ready4sky"
 async def async_setup(hass, config):
     return True
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
-    hass.data[DOMAIN] = {}
+async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry):
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault("devices", {})
 
     config = config_entry.data
 
@@ -67,12 +66,17 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
         _LOGGER.error("Connect to %s through device %s failed", mac, device)
         return False
     
-    hass.data[DOMAIN][config_entry.entry_id] = kettler
+    hass.data[DOMAIN]["devices"][config_entry.entry_id] = kettler
     
-    if config_entry.unique_id is None:
-        hass.config_entries.async_update_entry(config_entry, unique_id=f'{DOMAIN}[{mac}]')
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.unique_id)},
+        manufacturer="Redmond",
+        name="Ready4Sky",
+    )
     
-    async_track_time_interval(hass, hass.data[DOMAIN][config_entry.entry_id].async_update, scan_delta)
+    async_track_time_interval(hass, hass.data[DOMAIN]["devices"][config_entry.entry_id].async_update, scan_delta)
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
@@ -87,8 +91,23 @@ async def async_remove_entry(hass, entry):
     try:
         for domain in SUPPORTED_DOMAINS:
             await hass.config_entries.async_forward_entry_unload(entry, domain)
+        hass.data[DOMAIN]["devices"].pop(entry.entry_id)
+        if len(hass.data[DOMAIN]["devices"]) == 0:
+            hass.data[DOMAIN].pop("devices")
     except ValueError:
         pass
+    return True
+
+async def async_unload_entry(hass, entry):
+    try:
+        for domain in SUPPORTED_DOMAINS:
+            await hass.config_entries.async_forward_entry_unload(entry, domain)
+        hass.data[DOMAIN]["devices"].pop(entry.entry_id)
+        if len(hass.data[DOMAIN]["devices"]) == 0:
+            hass.data[DOMAIN].pop("devices")
+    except ValueError:
+        pass
+    return True
 
 
 
