@@ -72,6 +72,7 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, config_entry.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         manufacturer="Redmond",
         name="Ready4Sky",
     )
