@@ -99,16 +99,7 @@ async def async_remove_entry(hass, entry):
         pass
     return True
 
-async def async_unload_entry(hass, entry):
-    try:
-        for domain in SUPPORTED_DOMAINS:
-            await hass.config_entries.async_forward_entry_unload(entry, domain)
-        hass.data[DOMAIN]["devices"].pop(entry.entry_id)
-        if len(hass.data[DOMAIN]["devices"]) == 0:
-            hass.data[DOMAIN].pop("devices")
-    except ValueError:
-        pass
-    return True
+
 
 
 
