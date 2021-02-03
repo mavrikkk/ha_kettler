@@ -59,6 +59,7 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
     try:
         await kettler.async_firstConnect()
         if not kettler._connected:
+            _LOGGER.error("Connection error")
             return False
     except:
         _LOGGER.error("Connect to %s through device %s failed", mac, device)
