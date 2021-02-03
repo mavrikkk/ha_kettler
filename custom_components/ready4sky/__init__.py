@@ -64,6 +64,9 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
         _LOGGER.error("Connect to %s through device %s failed", mac, device)
         return False
     
+    _LOGGER.error('TEST')
+    _LOGGER.error(str(hass.data[DOMAIN]))
+    _LOGGER.error('END TEST')
     hass.data[DOMAIN][config_entry.entry_id] = kettler
     
     device_registry = await dr.async_get_registry(hass)
