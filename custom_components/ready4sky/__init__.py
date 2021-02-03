@@ -15,7 +15,8 @@ from textwrap import wrap
 import logging
 
 from datetime import timedelta
-from homeassistant import config_entries, core
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, async_call_later
@@ -42,9 +43,10 @@ SUPPORTED_DOMAINS = ["water_heater", "sensor", "light", "switch", "fan"]
 DOMAIN = "ready4sky"
 
 async def async_setup(hass, config):
+    hass.data.setdefault(DOMAIN, {})
     return True
 
-async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     config = config_entry.data
 
@@ -64,13 +66,6 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
     except:
         _LOGGER.error("Connect to %s through device %s failed", mac, device)
         return False
-    
-    try:
-        test = hass.data[DOMAIN]
-        _LOGGER.error("try")
-    except:
-        hass.data[DOMAIN] = {}
-        _LOGGER.error("except")
 
     hass.data[DOMAIN][config_entry.entry_id] = kettler
     
@@ -85,19 +80,19 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
     
     async_track_time_interval(hass, hass.data[DOMAIN][config_entry.entry_id].async_update, scan_delta)
 
-    for domain in SUPPORTED_DOMAINS:
+    for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
     return True
 
 
 
-async def async_remove_entry(hass, entry):
+async def async_unload_entry(hass:HomeAssistant, entry:ConfigEntry):
     try:
-        for domain in SUPPORTED_DOMAINS:
-            await hass.config_entries.async_forward_entry_unload(entry, domain)
+        for component in SUPPORTED_DOMAINS:
+            await hass.config_entries.async_forward_entry_unload(entry, component)
         hass.data[DOMAIN].pop(entry.entry_id)
     except ValueError:
         pass
