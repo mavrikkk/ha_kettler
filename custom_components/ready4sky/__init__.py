@@ -45,8 +45,6 @@ async def async_setup(hass, config):
     return True
 
 async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry):
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault("devices", {})
 
     config = config_entry.data
 
@@ -66,7 +64,7 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
         _LOGGER.error("Connect to %s through device %s failed", mac, device)
         return False
     
-    hass.data[DOMAIN]["devices"][config_entry.entry_id] = kettler
+    hass.data[DOMAIN][config_entry.entry_id] = kettler
     
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -77,7 +75,7 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
         name="Ready4Sky",
     )
     
-    async_track_time_interval(hass, hass.data[DOMAIN]["devices"][config_entry.entry_id].async_update, scan_delta)
+    async_track_time_interval(hass, hass.data[DOMAIN][config_entry.entry_id].async_update, scan_delta)
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
@@ -92,9 +90,7 @@ async def async_remove_entry(hass, entry):
     try:
         for domain in SUPPORTED_DOMAINS:
             await hass.config_entries.async_forward_entry_unload(entry, domain)
-        hass.data[DOMAIN]["devices"].pop(entry.entry_id)
-        if len(hass.data[DOMAIN]["devices"]) == 0:
-            hass.data[DOMAIN].pop("devices")
+        hass.data[DOMAIN].pop(entry.entry_id)
     except ValueError:
         pass
     return True
