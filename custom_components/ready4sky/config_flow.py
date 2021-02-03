@@ -20,8 +20,8 @@ DEFAULT_DEVICE = "hci0"
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_USE_BACKLIGHT = True
 
-@config_entries.HANDLERS.register(DOMAIN)
-class RedmondKettlerConfigFlow(config_entries.ConfigFlow):
+#@config_entries.HANDLERS.register(DOMAIN)
+class RedmondKettlerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
