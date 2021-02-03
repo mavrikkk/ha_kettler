@@ -66,8 +66,10 @@ async def async_setup_entry(hass: core.HomeAssistant, config_entry: config_entri
     
     try:
         test = hass.data[DOMAIN]
+        _LOGGER.error("try")
     except:
         hass.data[DOMAIN] = {}
+        _LOGGER.error("except")
 
     hass.data[DOMAIN][config_entry.entry_id] = kettler
     
