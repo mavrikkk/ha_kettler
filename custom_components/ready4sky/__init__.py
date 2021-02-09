@@ -14,6 +14,9 @@ from datetime import datetime
 from textwrap import wrap
 import logging
 
+from random import seed
+from random import randint
+
 from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -57,8 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     backlight = config.get(CONF_USE_BACKLIGHT)
 
     kettler = RedmondKettler(hass, mac, password, device, backlight)
-
-    await asyncio.sleep(7)
+    
+    seed(1)
+    valueR = randint(5, 10)
+    await asyncio.sleep(valueR)
     
     try:
         await kettler.async_firstConnect()
