@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     kettler = RedmondKettler(hass, mac, password, device, backlight)
 
+    await asyncio.sleep(7)
+    
     try:
         await kettler.async_firstConnect()
         if not kettler._connected:
