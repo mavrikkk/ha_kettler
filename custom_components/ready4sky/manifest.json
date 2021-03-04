@@ -1,6 +1,7 @@
 {
   "domain": "ready4sky",
   "name": "ready4sky",
+  "version": "1.0",
   "documentation": "https://github.com/mavrikkk/ha_kettler/blob/master/README.md",
   "dependencies": [],
   "codeowners": ["@mavrikk"],
