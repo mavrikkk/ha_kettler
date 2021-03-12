@@ -4,11 +4,14 @@
 allows you to connect Redmond SkyKettle, SkyCooker and SkyHeat to your Home Assistant (full list of supported devices see in:  https://github.com/mavrikkk/ha_kettler/blob/master/custom_components/ready4sky/r4sconst.py ).
 
 BAD NEWS about my attempt to use BLEAK (https://github.com/hbldh/bleak) async libriry:   https://github.com/home-assistant/core/issues/37593
+
 After every update remove integration from HA and then add it again! После обновления модуля лучше удалить интеграцию из интерфейса HA и заново добавить ее.
 
-**!!!WARNING!!!**
+**!!!WARNING!!!** **!!!ПРЕДУПРЕЖДЕНИЕ!!!**
 
-Development has been paused because I have no devices left. For the last year I have been writing code "blindly" without debugging and without any validation. Use it at your own risk.
+Development has been paused because I have no REDMOND devices left. For the last year I have been writing code "blindly" without debugging and without any validation. Use it at your own risk.
+
+Разработка была приостановлена, так как у меня не осталось ни одного устройства REDMOND. Последний год разработка велась "вслепую", без отладки и без проверки. Используйте на свой собственный страх и риск.
 
 **What's new:**
 
