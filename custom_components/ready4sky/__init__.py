@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 
 from .r4sconst import SUPPORTED_DEVICES
+from .helper.decorators import retry
 
 CONF_USE_BACKLIGHT = 'use_backlight'
 
@@ -117,17 +118,11 @@ class BTLEConnection(btle.DefaultDelegate):
         self._mac = mac
         self._callbacks = {}
 
-    def __enter__(self, i=0):
-        try:
-            self.__exit__(None, None, None)
-            self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
-            self._conn.withDelegate(self)
-        except:
-            i=i+1
-            if i<5:
-                return self.__enter__(i)
-            else:
-                _LOGGER.error('unable to connect to device')
+    @retry(5)
+    def __enter__(self):
+        self.__exit__(None, None, None)
+        self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
+        self._conn.withDelegate(self)   
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -455,245 +450,148 @@ class RedmondKettler:
 
 
 ### composite methods
-    def startNightColor(self, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        offed = False
-                        if self._status == '02':
-                            if self.sendOff(conn):
-                                offed = True
-                        else:
+    @retry(5)
+    def startNightColor(self):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    offed = False
+                    if self._status == '02':
+                        if self.sendOff(conn):
                             offed = True
-                        if offed:
-                            if self.sendSetLights(conn, '01', self._rgb1):
-                                if self.sendMode(conn, '03', '00'):
-                                    if self.sendOn(conn):
-                                        if self.sendStatus(conn):
-                                            self._time_upd = time.strftime("%H:%M")
-                                            answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.startNightColor(i)
-            else:
-                _LOGGER.warning('five attempts of startNightColor failed')
-        return answ
+                    else:
+                        offed = True
+                    if offed:
+                        if self.sendSetLights(conn, '01', self._rgb1):
+                            if self.sendMode(conn, '03', '00'):
+                                if self.sendOn(conn):
+                                    if self.sendStatus(conn):
+                                        self._time_upd = time.strftime("%H:%M")
 
     async def async_startNightColor(self):
         await self.hass.async_add_executor_job(self.startNightColor)
 
-    def modeOn(self, mode = "00", temp = "00", i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        offed = False
-                        if self._status == '02':
-                            if self.sendOff(conn):
-                                offed = True
-                        else:
+    @retry(5)
+    def modeOn(self, mode = "00", temp = "00"):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    offed = False
+                    if self._status == '02':
+                        if self.sendOff(conn):
                             offed = True
-                        if offed:
-                            if self.sendMode(conn, mode, temp):
-                                if self.sendOn(conn):
-                                    if self.sendStatus(conn):
-                                        self._time_upd = time.strftime("%H:%M")
-                                        answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeOn(mode,temp,i)
-            else:
-                _LOGGER.warning('five attempts of modeOn failed')
-        return answ
-
-    async def async_modeOn(self, mode = "00", temp = "00"):
-        await self.hass.async_add_executor_job(partial(self.modeOn, mode, temp, 0))
-
-    def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01', i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        offed = False
-                        if self._status != '00':
-                            if self.sendOff(conn):
-                                offed = True
-                        else:
-                            offed = True
-                        if offed:
-                            if self.sendModeCook(conn, prog, sprog, temp, hours, minutes, dhours, dminutes, heat):
-                                if self.sendOn(conn):
-                                    if self.sendStatus(conn):
-                                        self._time_upd = time.strftime("%H:%M")
-                                        answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeOnCook(prog, sprog, temp, hours, minutes, dhours, dminutes, heat, i)
-            else:
-                _LOGGER.warning('five attempts of modeOn failed')
-        return answ
-
-    async def async_modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01'):
-        await self.hass.async_add_executor_job(partial(self.modeOnCook, prog, sprog, temp, hours, minutes, dhours, dminutes, heat, 0))
-
-    def modeTempCook(self, temp, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendTempCook(conn, temp):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeTempCook(temp, i)
-            else:
-                _LOGGER.warning('five attempts of modeTempCook failed')
-        return answ
-
-    async def async_modeTempCook(self, temp):
-        await self.hass.async_add_executor_job(partial(self.modeTempCook, temp, 0))
-
-    def modeFan(self, speed, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendTempCook(conn, speed):
-                            if self.sendAfterSpeed(conn):
-                                if self._status == '00':
-                                    answ1 = self.sendOn(conn)
+                    else:
+                        offed = True
+                    if offed:
+                        if self.sendMode(conn, mode, temp):
+                            if self.sendOn(conn):
                                 if self.sendStatus(conn):
                                     self._time_upd = time.strftime("%H:%M")
-                                    answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeFan(speed, i)
-            else:
-                _LOGGER.warning('five attempts of modeFan failed')
-        return answ
+
+    async def async_modeOn(self, mode = "00", temp = "00"):
+        await self.hass.async_add_executor_job(partial(self.modeOn, mode, temp))
+
+    @retry(5)
+    def modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01'):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    offed = False
+                    if self._status != '00':
+                        if self.sendOff(conn):
+                            offed = True
+                    else:
+                        offed = True
+                    if offed:
+                        if self.sendModeCook(conn, prog, sprog, temp, hours, minutes, dhours, dminutes, heat):
+                            if self.sendOn(conn):
+                                if self.sendStatus(conn):
+                                    self._time_upd = time.strftime("%H:%M")
+
+    async def async_modeOnCook(self, prog, sprog, temp, hours, minutes, dhours='00', dminutes='00', heat = '01'):
+        await self.hass.async_add_executor_job(partial(self.modeOnCook, prog, sprog, temp, hours, minutes, dhours, dminutes, heat))
+
+    @retry(5)
+    def modeTempCook(self, temp):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendTempCook(conn, temp):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
+                            answ = True
+
+    async def async_modeTempCook(self, temp):
+        await self.hass.async_add_executor_job(partial(self.modeTempCook, temp))
+
+    @retry(5)
+    def modeFan(self, speed):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendTempCook(conn, speed):
+                        if self.sendAfterSpeed(conn):
+                            if self._status == '00':
+                                answ1 = self.sendOn(conn)
+                            if self.sendStatus(conn):
+                                self._time_upd = time.strftime("%H:%M")
 
     async def async_modeFan(self, speed):
-        await self.hass.async_add_executor_job(partial(self.modeFan, speed, 0))
+        await self.hass.async_add_executor_job(partial(self.modeFan, speed))
 
-    def modeIon(self, onoff, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendIonCmd(conn, onoff):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeIon(onoff, i)
-            else:
-                _LOGGER.warning('five attempts of modeIon failed')
-        return answ
+    @retry(5)
+    def modeIon(self, onoff):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendIonCmd(conn, onoff):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
 
     async def async_modeIon(self, onoff):
-        await self.hass.async_add_executor_job(partial(self.modeIon, onoff, 0))
+        await self.hass.async_add_executor_job(partial(self.modeIon, onoff))
 
-    def modeTimeCook(self, hours, minutes, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendTimerCook(conn, hours, minutes):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeTimeCook(hours, minutes, i)
-            else:
-                _LOGGER.warning('five attempts of modeTimeCook failed')
-        return answ
+    @retry(5)
+    def modeTimeCook(self, hours, minutes):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendTimerCook(conn, hours, minutes):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
 
     async def async_modeTimeCook(self, hours, minutes):
-        await self.hass.async_add_executor_job(partial(self.modeTimeCook, hours, minutes, 0))
+        await self.hass.async_add_executor_job(partial(self.modeTimeCook, hours, minutes))
 
-    def modeOff(self, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendOff(conn):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeOff(i)
-            else:
-                _LOGGER.warning('five attempts of modeOff failed')
-        return answ
+    @retry(5)
+    def modeOff(self):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendOff(conn):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
 
     async def async_modeOff(self):
         await self.hass.async_add_executor_job(self.modeOff)
 
-    def firstConnect(self, i=0):
+    @retry(5)
+    def firstConnect(self):
         self.findType()
         iter = 0
         self._connected = False
-        answ = False
-        try:
-            with self._conn as conn:
-                while iter < 10:  # 10 attempts to auth
-                    if self.sendResponse(conn):
-                        if self.sendAuth(conn):
-                            break
-                    sleep(1)
-                    iter+=1
-                if self._connected:
-                    if self.sendUseBackLight(conn):
-                        if self.sendSync(conn):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                self.firstConnect(i)
-            else:
-                _LOGGER.warning('five attempts of firstConnect failed')
+        with self._conn as conn:
+            while iter < 10:  # 10 attempts to auth
+                if self.sendResponse(conn):
+                    if self.sendAuth(conn):
+                        break
+                sleep(1)
+                iter+=1
+            if self._connected:
+                if self.sendUseBackLight(conn):
+                    if self.sendSync(conn):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
 
     async def async_firstConnect(self):
         await self.hass.async_add_executor_job(self.firstConnect)
@@ -714,25 +612,14 @@ class RedmondKettler:
         #except:
             #_LOGGER.error('unable to know the type of device...use default')
 
-    def modeUpdate(self, i=0):
-        answ = False
-        try:
-            with self._conn as conn:
-                if self.sendResponse(conn):
-                    if self.sendAuth(conn):
-                        if self.sendSync(conn):
-                            if self.sendStatus(conn):
-                                self._time_upd = time.strftime("%H:%M")
-                                answ = True
-        except:
-            pass
-        if not answ:
-            i=i+1
-            if i<5:
-                answ = self.modeUpdate(i)
-            else:
-                _LOGGER.warning('five attempts of modeUpdate failed')
-        return answ
+    @retry(5)
+    def modeUpdate(self):
+        with self._conn as conn:
+            if self.sendResponse(conn):
+                if self.sendAuth(conn):
+                    if self.sendSync(conn):
+                        if self.sendStatus(conn):
+                            self._time_upd = time.strftime("%H:%M")
 
     async def async_modeUpdate(self):
         await self.hass.async_add_executor_job(self.modeUpdate)
