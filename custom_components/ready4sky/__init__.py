@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 
 from .r4sconst import SUPPORTED_DEVICES
-from .helper.decorators import retry
+from .decorators import retry
 
 CONF_USE_BACKLIGHT = 'use_backlight'
 
