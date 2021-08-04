@@ -9,6 +9,8 @@ BAD NEWS about my attempt to use BLEAK (https://github.com/hbldh/bleak) async li
 
 **What's new:**
 
+2021/08/04 fixed the bug https://github.com/mavrikkk/ha_kettler/issues/78
+
 2021/01/27 Add multi-device support (for tests).
 
 2020/10/13 Add support of SkyHeat RCH-4529S (RFS-HPL001).
