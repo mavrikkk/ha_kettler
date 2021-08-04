@@ -111,16 +111,22 @@ async def async_unload_entry(hass:HomeAssistant, entry:ConfigEntry):
 
 class BTLEConnection(btle.DefaultDelegate):
 
-    def __init__(self, mac):
+    def __init__(self, mac, device):
         btle.DefaultDelegate.__init__(self)
         self._conn = None
         self._mac = mac
+        self._iface = 0
+        match_result = search(r'hci([\d]+)', device)
+        if match_result is None:
+            pass
+        else:
+            self._iface = int(match_result.group(1))
         self._callbacks = {}
 
     def __enter__(self, i=0):
         try:
             self.__exit__(None, None, None)
-            self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM)
+            self._conn = btle.Peripheral(deviceAddr=self._mac, addrType=btle.ADDR_TYPE_RANDOM, iface=self._iface)
             self._conn.withDelegate(self)
         except:
             i=i+1
@@ -190,7 +196,7 @@ class RedmondKettler:
         self._tm = 0 #  timer min
         self._ion = '00' # 00 - off   01 - on
         self._connected = False
-        self._conn = BTLEConnection(self._mac)
+        self._conn = BTLEConnection(self._mac, self._device)
         self._conn.set_callback(11, self.handle_notification)
 
 
