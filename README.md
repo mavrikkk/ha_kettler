@@ -15,6 +15,8 @@ Development has been paused because I have no REDMOND devices left. For the last
 
 **What's new:**
 
+2021/08/04 fixed the bug https://github.com/mavrikkk/ha_kettler/issues/78.
+
 2021/01/27 Add multi-device support (for tests, but without success).
 
 2020/10/13 Add support for SkyHeat RCH-4529S (RFS-HPL001).
