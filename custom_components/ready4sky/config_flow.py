@@ -113,6 +113,6 @@ class RedmondKettlerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 iface = int(match_result.group(1))
                 scanner = Scanner(iface=iface)
-                self._ble_devices = {str(device.addr):str(device.getValueText(9))+','+str(device.addr) for device in scanner.scan(3.0)}
+                self._ble_devices = {str(device.addr):str(device.getValueText(9))+','+str(device.addr) for device in scanner.scan(5.0)}
         except:
             pass
