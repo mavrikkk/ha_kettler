@@ -124,7 +124,7 @@ class RedmondWaterHeater(WaterHeaterEntity):
         return self._tgtemp
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         data = {"target_temp_step": 5}
         return data
 
@@ -242,7 +242,7 @@ class RedmondCooker(WaterHeaterEntity):
         return self._tgtemp
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         data = {"target_temp_step": 5}
         return data
 
