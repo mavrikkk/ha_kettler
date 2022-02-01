@@ -76,7 +76,7 @@ class RedmondSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attributes = {'sync':self._sync}
         return attributes
 
@@ -147,7 +147,7 @@ class RedmondCooker(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         attributes = {
             'sync':str(self._sync),
             'Timer PROG':self._timer_prog,
